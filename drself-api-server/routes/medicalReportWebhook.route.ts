@@ -16,7 +16,7 @@ router.post('/medical-report-webhook', async (req, res) => {
 
     if ((payload.type === 'INSERT' || payload.type === 'UPDATE') && payload.record && payload.record.file_url) {
       const fileUrl = payload.record.file_url;
-      const userId = payload.record.user_id;
+      const userId = payload.record.id;
 
       console.log(`Processing record for user: ${userId}, file: ${fileUrl}`);
 

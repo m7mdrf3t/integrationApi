@@ -1,11 +1,12 @@
 {
   "name": "drself-api-server",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn server.ts",
-    "start": "ts-node server.ts"
+    "build": "tsc --outDir dist",
+    "start": "node dist/server.js"
   },
   "keywords": [],
   "author": "",

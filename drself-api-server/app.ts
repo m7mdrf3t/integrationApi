@@ -1,5 +1,5 @@
 import express from 'express';
-import cors from 'cors';
+// import cors from 'cors';
 import dotenv from 'dotenv';
 import registerUserRouter from './routes/registerUser.route';
 import swaggerUi from 'swagger-ui-express';
@@ -13,7 +13,7 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors());
+// app.use(cors());
 app.use(express.json());
 
 // API v1 routes

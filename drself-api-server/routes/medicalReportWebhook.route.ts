@@ -16,7 +16,7 @@ router.post('/medical-report-webhook', async (req, res) => {
 
     if ((payload.type === 'INSERT' || payload.type === 'UPDATE') && payload.record && payload.record.file_url) {
       const fileUrl = payload.record.file_url;
-      const userId = payload.record.id;
+      const userId = payload.record.user_id; // Use user_id instead of id (which is the medical report ID)
 
       console.log(`Processing record for user: ${userId}, file: ${fileUrl}`);
 
@@ -25,15 +25,36 @@ router.post('/medical-report-webhook', async (req, res) => {
         return res.status(400).json({ success: false, error: 'No user_id found' });
       }
 
+      // First, let's check what we're querying for
+      console.log(`Querying profiles table for id: ${userId}`);
+      
       const { data: profileData, error: profileError } = await supabaseClient
         .from('profiles')
-        .select('buildup_user_id')
+        .select('buildup_user_id, id')
         .eq('id', userId)
         .single();
 
       if (profileError) {
         console.error('Error fetching profile:', profileError);
-        return res.status(500).json({ success: false, error: 'Profile fetch error', details: profileError.message });
+        
+        // Let's also check what profiles exist in the database
+        const { data: allProfiles, error: listError } = await supabaseClient
+          .from('profiles')
+          .select('id, buildup_user_id')
+          .limit(5);
+        
+        if (listError) {
+          console.error('Error listing profiles:', listError);
+        } else {
+          console.log('Available profiles (first 5):', allProfiles);
+        }
+        
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Profile fetch error', 
+          details: profileError.message,
+          searched_for: userId
+        });
       }
 
       if (profileData && profileData.buildup_user_id) {

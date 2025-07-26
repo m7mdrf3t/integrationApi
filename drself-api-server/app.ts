@@ -7,6 +7,7 @@ import swaggerSpec from './docs/swagger';
 import path from 'path';
 import fs from 'fs';
 import YAML from 'yamljs';
+import medicalReportWebhookRouter from './routes/medicalReportWebhook.route';
 
 // Load environment variables
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(express.json());
 
 // API v1 routes
 app.use('/api/v1', registerUserRouter);
+app.use('/api/v1', medicalReportWebhookRouter);
 
 // Serve the raw YAML file
 app.get('/api/v1/docs/yaml', (req, res) => {

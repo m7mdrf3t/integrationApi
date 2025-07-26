@@ -1,0 +1,195 @@
+openapi: 3.0.0
+info:
+  title: Dr.Self API Middleware
+  version: 1.0.0
+  description: API middleware between external consumers and Supabase Edge Functions for user registration.
+tags:
+  - name: Register
+    description: User registration endpoints
+  - name: Webhook
+    description: Medical report webhook endpoints
+paths:
+  /api/v1/register:
+    post:
+      tags:
+        - Register
+      summary: Register a new user in the Dr.Self system
+      description: >
+        Registers a user by forwarding the request to a Supabase Edge Function.
+        Expects a JSON body with fullName, email, and buildupUserId.
+      parameters:
+        - in: header
+          name: x-drself-auth
+          required: true
+          schema:
+            type: string
+          description: Custom API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullName
+                - email
+                - buildupUserId
+              properties:
+                fullName:
+                  type: string
+                  example: Sarah Hany
+                email:
+                  type: string
+                  format: email
+                  example: sarah.hany@example.com
+                buildupUserId:
+                  type: string
+                  example: buildup_abc123
+            example:
+              fullName: Sarah Hany
+              email: sarah.hany@example.com
+              buildupUserId: buildup_abc123
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  drSelfUserId:
+                    type: string
+                    example: drself-67890
+              example:
+                success: true
+                drSelfUserId: drself-67890
+        '400':
+          description: Bad Request - Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Missing required fields: fullName, email, buildupUserId
+              example:
+                success: false
+                error: Missing required fields: fullName, email, buildupUserId
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Internal server error
+              example:
+                success: false
+                error: Internal server error 
+  /api/v1/medical-report-webhook:
+    post:
+      tags:
+        - Webhook
+      summary: Medical Report Webhook
+      description: >
+        Receives webhook events for medical report file uploads/updates. Requires Authorization header. Processes the payload and may call an external webhook if conditions are met.
+      parameters:
+        - in: header
+          name: Authorization
+          required: true
+          schema:
+            type: string
+          description: Bearer token for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [INSERT, UPDATE]
+                  example: INSERT
+                record:
+                  type: object
+                  properties:
+                    file_url:
+                      type: string
+                      example: https://example.com/report.pdf
+                    user_id:
+                      type: string
+                      example: 123e4567-e89b-12d3-a456-426614174000
+            example:
+              type: INSERT
+              record:
+                file_url: https://example.com/report.pdf
+                user_id: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  url:
+                    type: string
+                    example: https://example.com/report.pdf
+                  webhook_called:
+                    type: boolean
+                    example: true
+                  webhook_response:
+                    type: string
+                    example: OK
+                  webhook_status:
+                    type: integer
+                    example: 200
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: No user_id found
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Authorization header required
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error 

@@ -6,6 +6,8 @@ info:
 tags:
   - name: Register
     description: User registration endpoints
+  - name: Webhook
+    description: Medical report webhook endpoints
 paths:
   /api/v1/register:
     post:
@@ -96,3 +98,91 @@ paths:
               example:
                 success: false
                 error: Internal server error 
+  /api/v1/medical-report-webhook:
+    post:
+      tags:
+        - Webhook
+      summary: Medical Report Webhook
+      description: >
+        Receives webhook events for medical report file uploads/updates. Processes the payload and may call an external webhook if conditions are met.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum: [INSERT, UPDATE]
+                  example: INSERT
+                record:
+                  type: object
+                  properties:
+                    file_url:
+                      type: string
+                      example: https://example.com/report.pdf
+                    user_id:
+                      type: string
+                      example: 123e4567-e89b-12d3-a456-426614174000
+            example:
+              type: INSERT
+              record:
+                file_url: https://example.com/report.pdf
+                user_id: 123e4567-e89b-12d3-a456-426614174000
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  url:
+                    type: string
+                    example: https://example.com/report.pdf
+                  webhook_called:
+                    type: boolean
+                    example: true
+                  webhook_response:
+                    type: string
+                    example: OK
+                  webhook_status:
+                    type: integer
+                    example: 200
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: No user_id found
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Authorization header required
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error 

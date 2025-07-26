@@ -1,0 +1,98 @@
+openapi: 3.0.0
+info:
+  title: Dr.Self API Middleware
+  version: 1.0.0
+  description: API middleware between external consumers and Supabase Edge Functions for user registration.
+tags:
+  - name: Register
+    description: User registration endpoints
+paths:
+  /api/v1/register:
+    post:
+      tags:
+        - Register
+      summary: Register a new user in the Dr.Self system
+      description: >
+        Registers a user by forwarding the request to a Supabase Edge Function.
+        Expects a JSON body with fullName, email, and buildupUserId.
+      parameters:
+        - in: header
+          name: x-drself-auth
+          required: true
+          schema:
+            type: string
+          description: Custom API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullName
+                - email
+                - buildupUserId
+              properties:
+                fullName:
+                  type: string
+                  example: Sarah Hany
+                email:
+                  type: string
+                  format: email
+                  example: sarah.hany@example.com
+                buildupUserId:
+                  type: string
+                  example: buildup_abc123
+            example:
+              fullName: Sarah Hany
+              email: sarah.hany@example.com
+              buildupUserId: buildup_abc123
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  drSelfUserId:
+                    type: string
+                    example: drself-67890
+              example:
+                success: true
+                drSelfUserId: drself-67890
+        '400':
+          description: Bad Request - Missing or invalid fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Missing required fields: fullName, email, buildupUserId
+              example:
+                success: false
+                error: Missing required fields: fullName, email, buildupUserId
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: Internal server error
+              example:
+                success: false
+                error: Internal server error 

@@ -14,12 +14,9 @@ router.post('/medical-report-webhook', async (req, res) => {
     const payload = req.body;
     console.log('Webhook payload received:', JSON.stringify(payload, null, 2));
 
-    // Handle the case where payload might be wrapped in a body property
-    const actualPayload = payload.body || payload;
-    
-    if ((actualPayload.type === 'INSERT' || actualPayload.type === 'UPDATE') && actualPayload.record && actualPayload.record.file_url) {
-      const fileUrl = actualPayload.record.file_url;
-      const userId = actualPayload.record.user_id;
+    if ((payload.type === 'INSERT' || payload.type === 'UPDATE') && payload.record && payload.record.file_url) {
+      const fileUrl = payload.record.file_url;
+      const userId = payload.record.user_id;
 
       console.log(`Processing record for user: ${userId}, file: ${fileUrl}`);
 

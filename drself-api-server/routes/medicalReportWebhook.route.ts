@@ -218,9 +218,13 @@ router.post('/medical-report-webhook', async (req, res) => {
 
           // Handle large responses using the ResponseHandler
           const webhookResult = await webhookResponse.text();
-          console.log('Buildup gateway status:', webhookResponse.status);
-          console.log('Buildup gateway response:', webhookResult);
-          console.log('Buildup gateway response length:', webhookResult.length);
+          console.log('=== BUILDUP GATEWAY RESPONSE ===');
+          console.log('Status:', webhookResponse.status);
+          console.log('Status Text:', webhookResponse.statusText);
+          console.log('Headers:', Object.fromEntries(webhookResponse.headers.entries()));
+          console.log('Response Body:', webhookResult);
+          console.log('Response Length:', webhookResult.length);
+          console.log('=== END BUILDUP GATEWAY RESPONSE ===');
 
           const responseHandler = new ResponseHandler({
             maxSize: 2000, // 2KB limit

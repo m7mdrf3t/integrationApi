@@ -9,6 +9,7 @@ import fs from 'fs';
 import YAML from 'yamljs';
 import medicalReportWebhookRouter from './routes/medicalReportWebhook.route';
 import webhookResponsesRouter from './routes/webhookResponses.route';
+import debugRouter from './routes/debug.route';
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use('/api/v1', registerUserRouter);
 app.use('/api/v1', medicalReportWebhookRouter);
 app.use('/api/v1', webhookResponsesRouter);
+app.use('/api/v1', debugRouter);
 
 // Serve the raw YAML file
 app.get('/api/v1/docs/yaml', (req, res) => {

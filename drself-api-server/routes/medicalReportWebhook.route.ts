@@ -237,6 +237,9 @@ router.post('/medical-report-webhook', async (req, res) => {
             webhookResponse.status
           );
 
+          // Trigger debug endpoint internally after processing
+          const debugResponse = await triggerDebugEndpoint(userId, webhookResult, payload);
+
           return res.json({
             success: true,
             url: fileUrl,
@@ -246,7 +249,8 @@ router.post('/medical-report-webhook', async (req, res) => {
             buildup_status: webhookResponse.status,
             response_size: responseInfo.responseSize,
             storage_method: responseInfo.storageMethod,
-            sent_to: 'https://Buildup-gateway.x-inity.com/IntegrationAPI/v1/HealthInsights/Submit'
+            sent_to: 'https://Buildup-gateway.x-inity.com/IntegrationAPI/v1/HealthInsights/Submit',
+            debug_triggered: debugResponse
           });
         } catch (webhookError: any) {
           console.error('Error calling Buildup gateway:', webhookError);
@@ -280,5 +284,75 @@ router.post('/medical-report-webhook', async (req, res) => {
     });
   }
 });
+
+// Helper function to trigger debug endpoint internally
+async function triggerDebugEndpoint(userId: string, webhookResult: string, originalPayload: any) {
+  try {
+    console.log('🔍 Triggering debug endpoint for user:', userId);
+    
+    // Store the webhook response for debugging
+    const supabaseClient = createClient(
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!
+    );
+
+    const responseId = `debug_${Date.now()}_${userId}`;
+    
+    const { error: storeError } = await supabaseClient
+      .from('webhook_responses')
+      .insert({
+        id: responseId,
+        user_id: userId,
+        response_data: webhookResult,
+        status: 200,
+        created_at: new Date().toISOString()
+      });
+
+    if (storeError) {
+      console.error('Error storing debug response:', storeError);
+      return {
+        success: false,
+        message: 'Failed to store debug response',
+        error: storeError.message
+      };
+    }
+
+    // Get the stored response for verification
+    const { data: debugData, error: debugError } = await supabaseClient
+      .from('webhook_responses')
+      .select('*')
+      .eq('id', responseId)
+      .single();
+
+    if (debugError) {
+      return {
+        success: false,
+        message: 'Failed to retrieve debug response',
+        error: debugError.message
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Debug endpoint triggered successfully',
+      response_id: responseId,
+      stored_data: {
+        id: debugData.id,
+        user_id: debugData.user_id,
+        status: debugData.status,
+        created_at: debugData.created_at,
+        response_preview: debugData.response_data ? debugData.response_data.substring(0, 200) + '...' : 'No data'
+      }
+    };
+
+  } catch (error: any) {
+    console.error('Error triggering debug endpoint:', error);
+    return {
+      success: false,
+      message: 'Debug endpoint failed',
+      error: error.message
+    };
+  }
+}
 
 export default router; 

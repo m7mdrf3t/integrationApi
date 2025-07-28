@@ -47,6 +47,13 @@ async function getOAuthToken(): Promise<string> {
 router.post('/medical-report-webhook', async (req, res) => {
   console.log('Medical report webhook endpoint triggered');
   
+  // Require custom auth header (same as other routes)
+  const customKey = req.headers['x-drself-auth'];
+  const expectedKey = process.env.DRSELF_API_KEY;
+  if (!customKey || customKey !== expectedKey) {
+    return res.status(401).json({ error: 'Authorization header required' });
+  }
+  
   try {
     const payload = req.body;
     console.log('Webhook payload received:', JSON.stringify(payload, null, 2));
@@ -75,7 +82,28 @@ router.post('/medical-report-webhook', async (req, res) => {
       });
     }
 
-    const { file_url, user_id, title, status, description } = payload.record;
+    const { 
+      file_url, 
+      user_id, 
+      title, 
+      status, 
+      description,
+      id,
+      iv_drip,
+      summary,
+      diet_plan,
+      blood_test,
+      created_at,
+      life_style,
+      updated_at,
+      doctor_name,
+      report_date,
+      hospital_name,
+      summary_status,
+      food_supplement,
+      life_recommendation,
+      summary_generated_at
+    } = payload.record;
     
     console.log(`Processing ${payload.type} event for user: ${user_id}, file: ${file_url}`);
 
@@ -84,11 +112,26 @@ router.post('/medical-report-webhook', async (req, res) => {
 
     // Prepare the payload for Buildup gateway
     const buildupPayload = {
-      file_url,
-      user_id,
+      id,
       title,
       status,
+      iv_drip,
+      summary,
+      user_id,
+      file_url,
+      diet_plan,
+      blood_test,
+      created_at,
+      life_style,
+      updated_at,
       description,
+      doctor_name,
+      report_date,
+      hospital_name,
+      summary_status,
+      food_supplement,
+      life_recommendation,
+      summary_generated_at,
       event_type: payload.type,
       timestamp: new Date().toISOString()
     };

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-echo "🧪 Testing Medical Report Webhook..."
+echo "🧪 Testing LIVE Medical Report Webhook..."
+echo "🌐 Endpoint: https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook"
+echo ""
 
 # Test payload with all parameters
 PAYLOAD='{
@@ -53,16 +55,17 @@ PAYLOAD='{
   }
 }'
 
-echo "📤 Sending payload to webhook..."
+echo "📤 Sending payload to LIVE webhook..."
 echo "Payload: $PAYLOAD"
 echo ""
 
-# Make the request
+# Make the request to live endpoint
 curl -X POST \
-  http://localhost:3000/api/v1/medical-report-webhook \
+  https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook \
   -H "Content-Type: application/json" \
+  -H "x-drself-auth: test-key" \
   -d "$PAYLOAD" \
-  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\n"
+  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\nResponse Size: %{size_download} bytes\n"
 
 echo ""
-echo "✅ Test completed!" 
+echo "✅ Live webhook test completed!" 

@@ -1,6 +1,9 @@
 #!/bin/bash
 
-echo "🧪 Testing Medical Report Webhook..."
+echo "🧪 Testing LIVE Medical Report Webhook with Correct Auth..."
+echo "🌐 Endpoint: https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook"
+echo "🔑 Using: x-drself-auth header (same as other routes)"
+echo ""
 
 # Test payload with all parameters
 PAYLOAD='{
@@ -53,16 +56,21 @@ PAYLOAD='{
   }
 }'
 
-echo "📤 Sending payload to webhook..."
+echo "📤 Sending payload to LIVE webhook with correct auth..."
 echo "Payload: $PAYLOAD"
 echo ""
 
-# Make the request
+# Make the request to live endpoint with correct auth header
 curl -X POST \
-  http://localhost:3000/api/v1/medical-report-webhook \
+  https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook \
   -H "Content-Type: application/json" \
+  -H "x-drself-auth: test-key" \
   -d "$PAYLOAD" \
-  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\n"
+  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\nResponse Size: %{size_download} bytes\n"
 
 echo ""
-echo "✅ Test completed!" 
+echo "✅ Live webhook test with correct auth completed!"
+echo ""
+echo "💡 Note: If this still fails, you may need to:"
+echo "   1. Set the correct DRSELF_API_KEY in Railway environment variables"
+echo "   2. Use the actual API key value instead of 'test-key'" 

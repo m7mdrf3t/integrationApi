@@ -1,6 +1,22 @@
 #!/bin/bash
 
-echo "🧪 Testing Medical Report Webhook..."
+echo "🧪 Testing LIVE Medical Report Webhook with Environment API Key..."
+echo "🌐 Endpoint: https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook"
+echo "🔑 Using: DRSELF_API_KEY environment variable"
+echo ""
+
+# Get API key from environment variable
+API_KEY="${DRSELF_API_KEY:-your-api-key-here}"
+
+if [ "$API_KEY" = "your-api-key-here" ]; then
+  echo "❌ Error: DRSELF_API_KEY environment variable not set!"
+  echo "Please set it with: export DRSELF_API_KEY=your-actual-api-key"
+  echo "Or add it to Railway environment variables"
+  exit 1
+fi
+
+echo "✅ Using API Key: $API_KEY"
+echo ""
 
 # Test payload with all parameters
 PAYLOAD='{
@@ -53,16 +69,17 @@ PAYLOAD='{
   }
 }'
 
-echo "📤 Sending payload to webhook..."
+echo "📤 Sending payload to LIVE webhook..."
 echo "Payload: $PAYLOAD"
 echo ""
 
-# Make the request
+# Make the request to live endpoint with environment API key
 curl -X POST \
-  http://localhost:3000/api/v1/medical-report-webhook \
+  https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook \
   -H "Content-Type: application/json" \
+  -H "x-drself-auth: $API_KEY" \
   -d "$PAYLOAD" \
-  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\n"
+  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\nResponse Size: %{size_download} bytes\n"
 
 echo ""
-echo "✅ Test completed!" 
+echo "✅ Live webhook test with environment API key completed!" 

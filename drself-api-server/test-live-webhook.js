@@ -1,9 +1,5 @@
-#!/bin/bash
-
-echo "🧪 Testing Medical Report Webhook..."
-
-# Test payload with all parameters
-PAYLOAD='{
+// Test payload with all parameters for LIVE endpoint
+const testPayload = {
   "type": "UPDATE",
   "table": "medical_reports",
   "record": {
@@ -51,18 +47,43 @@ PAYLOAD='{
     "life_recommendation": "",
     "summary_generated_at": null
   }
-}'
+};
 
-echo "📤 Sending payload to webhook..."
-echo "Payload: $PAYLOAD"
-echo ""
+async function testLiveWebhook() {
+  try {
+    console.log('🧪 Testing LIVE Medical Report Webhook...');
+    console.log('🌐 Endpoint: https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook');
+    console.log('📤 Sending payload:', JSON.stringify(testPayload, null, 2));
+    
+    const startTime = Date.now();
+    
+    const response = await fetch('https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-drself-auth': 'test-key'
+      },
+      body: JSON.stringify(testPayload)
+    });
 
-# Make the request
-curl -X POST \
-  http://localhost:3000/api/v1/medical-report-webhook \
-  -H "Content-Type: application/json" \
-  -d "$PAYLOAD" \
-  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\n"
+    const endTime = Date.now();
+    const result = await response.text();
+    
+    console.log('\n📥 Response Status:', response.status);
+    console.log('📥 Response Headers:', Object.fromEntries(response.headers.entries()));
+    console.log('📥 Response Body:', result);
+    console.log('⏱️  Response Time:', endTime - startTime, 'ms');
+    
+    if (response.ok) {
+      console.log('\n✅ Live webhook test completed successfully!');
+    } else {
+      console.log('\n❌ Live webhook test failed!');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error testing live webhook:', error.message);
+  }
+}
 
-echo ""
-echo "✅ Test completed!" 
+// Run the test
+testLiveWebhook(); 

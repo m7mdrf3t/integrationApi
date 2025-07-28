@@ -1,4 +1,4 @@
-// Test payload based on the example provided
+// Test payload with all parameters
 const testPayload = {
   "type": "UPDATE",
   "table": "medical_reports",
@@ -10,18 +10,18 @@ const testPayload = {
     "summary": null,
     "user_id": "23d2bf91-f9d0-4a20-901c-59f2b7b1bacb",
     "file_url": "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/23d2bf91-f9d0-4a20-901c-59f2b7b1bacb/1753569790450_Mahfouz_7_2_25.pdf",
-    "diet_plan": "",
+    "diet_plan": "Low carb diet",
     "blood_test": "fdfdf",
     "created_at": "2025-07-26T22:43:10.988526+00:00",
-    "life_style": "",
+    "life_style": "Active lifestyle",
     "updated_at": "2025-07-26T23:19:56.60343+00:00",
     "description": "build up",
-    "doctor_name": null,
+    "doctor_name": "Dr. Smith",
     "report_date": "2025-07-26",
-    "hospital_name": null,
+    "hospital_name": "City Hospital",
     "summary_status": "pending",
-    "food_supplement": "",
-    "life_recommendation": "",
+    "food_supplement": "Vitamin D, Omega-3",
+    "life_recommendation": "Exercise regularly",
     "summary_generated_at": null
   },
   "schema": "public",

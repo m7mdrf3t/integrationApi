@@ -1,6 +1,8 @@
 #!/bin/bash
 
-echo "🧪 Testing Medical Report Webhook..."
+echo "🧪 Testing LIVE Medical Report Webhook with Auth Headers..."
+echo "🌐 Endpoint: https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook"
+echo ""
 
 # Test payload with all parameters
 PAYLOAD='{
@@ -53,16 +55,42 @@ PAYLOAD='{
   }
 }'
 
-echo "📤 Sending payload to webhook..."
+echo "📤 Sending payload to LIVE webhook with auth headers..."
 echo "Payload: $PAYLOAD"
 echo ""
 
-# Make the request
+# Test 1: With API Key header
+echo "🔑 Test 1: With API Key header..."
 curl -X POST \
-  http://localhost:3000/api/v1/medical-report-webhook \
+  https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: test-key" \
   -d "$PAYLOAD" \
-  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\n"
+  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\nResponse Size: %{size_download} bytes\n"
 
 echo ""
-echo "✅ Test completed!" 
+echo ""
+
+# Test 2: With Bearer token
+echo "🔑 Test 2: With Bearer token..."
+curl -X POST \
+  https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer test-token" \
+  -d "$PAYLOAD" \
+  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\nResponse Size: %{size_download} bytes\n"
+
+echo ""
+echo ""
+
+# Test 3: With webhook secret
+echo "🔑 Test 3: With webhook secret..."
+curl -X POST \
+  https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Secret: test-secret" \
+  -d "$PAYLOAD" \
+  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\nResponse Size: %{size_download} bytes\n"
+
+echo ""
+echo "✅ Live webhook auth tests completed!" 

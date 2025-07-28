@@ -64,7 +64,7 @@ echo ""
 curl -X POST \
   https://integrationapi-production.up.railway.app/api/v1/medical-report-webhook \
   -H "Content-Type: application/json" \
-  -H "x-drself-auth: test-key" \
+  -H "DRSELF_API_KEY:drself_sk_4e7b1c2f8a9d4e3b9f6a1b2c3d4e5f6a" \
   -d "$PAYLOAD" \
   -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\nResponse Size: %{size_download} bytes\n"
 

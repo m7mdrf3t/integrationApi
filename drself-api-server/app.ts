@@ -2,6 +2,7 @@ import express from 'express';
 // import cors from 'cors';
 import dotenv from 'dotenv';
 import registerUserRouter from './routes/registerUser.route';
+import updateBuildUpUserIdRouter from './routes/updateBuildUpUserId.route';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './docs/swagger';
 import path from 'path';
@@ -21,6 +22,7 @@ app.use(express.json());
 
 // API v1 routes
 app.use('/api/v1', registerUserRouter);
+app.use('/api/v1', updateBuildUpUserIdRouter);
 app.use('/api/v1', medicalReportWebhookRouter);
 app.use('/api/v1', webhookResponsesRouter);
 app.use('/api/v1', debugRouter);

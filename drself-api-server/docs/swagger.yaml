@@ -8,6 +8,8 @@ tags:
     description: User registration endpoints
   - name: Webhook
     description: Medical report webhook endpoints
+  - name: User Management
+    description: User management endpoints
 paths:
   /api/v1/register:
     post:
@@ -92,9 +94,129 @@ paths:
                   success:
                     type: boolean
                     example: false
+                                    error:
+                    type: string
+                    example: Internal server error 
+  /api/v1/update-buildup-user-id:
+    post:
+      tags:
+        - User Management
+      summary: Update Buildup user ID for a user
+      description: Updates the Buildup user ID for a user identified by email and phone number
+      parameters:
+        - in: header
+          name: x-drself-auth
+          required: true
+          schema:
+            type: string
+          description: Custom API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - phoneNumber
+                - buildUp_user_id
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: "test@example.com"
+                phoneNumber:
+                  type: string
+                  description: User's phone number
+                  example: "1234567890"
+                buildUp_user_id:
+                  type: string
+                  description: The Buildup user ID to assign
+                  example: "test-id-123"
+            example:
+              email: "test@example.com"
+              phoneNumber: "1234567890"
+              buildUp_user_id: "test-id-123"
+      responses:
+        '200':
+          description: Buildup user ID updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Buildup user ID updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                        description: The user ID that was updated
+                        example: "550e8400-e29b-41d4-a716-446655440000"
+                      buildUp_user_id:
+                        type: string
+                        description: The new Buildup user ID
+                        example: "test-id-123"
+              example:
+                success: true
+                message: "Buildup user ID updated successfully"
+                data:
+                  user_id: "550e8400-e29b-41d4-a716-446655440000"
+                  buildUp_user_id: "test-id-123"
+        '400':
+          description: Bad request - Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
                   error:
                     type: string
-                    example: Internal server error
+                    example: "Invalid email format"
+              example:
+                error: "Invalid email format"
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized: Invalid or missing API key"
+              example:
+                error: "Unauthorized: Invalid or missing API key"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found"
+              example:
+                error: "User not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to update Buildup user ID"
+              example:
+                error: "Failed to update Buildup user ID"
               example:
                 success: false
                 error: Internal server error 

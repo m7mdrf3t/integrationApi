@@ -84,8 +84,44 @@ paths:
               example:
                 success: false
                 error: Missing required fields: fullName, email, buildupUserId
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unauthorized: Invalid or missing API key
+              example:
+                error: Unauthorized: Invalid or missing API key
+        '404':
+          description: User not found or edge function not available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+              example:
+                error: User not found
+        '422':
+          description: Validation error from edge function
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Validation failed
+              example:
+                error: Validation failed
         '500':
-          description: Internal Server Error
+          description: Internal Server Error - Edge function error or server error
           content:
             application/json:
               schema:
@@ -94,9 +130,12 @@ paths:
                   success:
                     type: boolean
                     example: false
-                                    error:
+                  error:
                     type: string
-                    example: Internal server error 
+                    example: Internal server error
+              example:
+                success: false
+                error: Internal server error 
   /api/v1/update-buildup-user-id:
     post:
       tags:

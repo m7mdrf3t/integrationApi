@@ -96,15 +96,25 @@ router.post('/medical-report-webhook', async (req, res) => {
     // --- Start of Enhanced Mapping Logic ---
     // 1. Get user profile from Supabase (if needed)
     let userProfile: any = {};
+    let userContact: { email?: string; phone?: string } = {};
     try {
-      const { data, error } = await supabase
-        .from('users') // Adjust table name if needed
-        .select('email, gender, age, date_of_birth, blood_group, weight_kg, height_m')
+      // Fetch from 'users' table (existing logic)
+      const { data: userData, error: userError } = await supabase
+        .from('medical_history')
+        .select('blood_type')
         .eq('id', record.user_id)
         .single();
-      if (!error && data) userProfile = data;
+      if (!userError && userData) userProfile = userData;
+
+      // Fetch from 'profiles' table for number and email
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('email, phone')
+        .eq('id', record.user_id)
+        .single();
+      if (!profileError && profileData) userContact = profileData;
     } catch (err) {
-      console.warn('Could not fetch user profile:', err);
+      console.warn('Could not fetch user profile or contact:', err);
     }
 
     // Parse ivDrip as array of objects { name, dosage, frequency }
@@ -195,7 +205,8 @@ router.post('/medical-report-webhook', async (req, res) => {
 
     // Build patientInfo and scanInfo
     const patientInfo = {
-      email: record.email || userProfile.email || null,
+      email: userContact.email || record.email || userProfile.email || null,
+      number: userContact.phone || null,
       userId: record.user_id,
       gender: record.gender || userProfile.gender || null,
       age: record.age || userProfile.age || null,

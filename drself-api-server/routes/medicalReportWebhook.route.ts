@@ -109,10 +109,18 @@ router.post('/medical-report-webhook', async (req, res) => {
       // Fetch from 'profiles' table for number and email
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('email, phone')
+        .select('email, phone, buildup_user_id')
         .eq('id', record.user_id)
         .single();
       if (!profileError && profileData) userContact = profileData;
+
+// --- CRUCIAL: Check for buildup_user_id before proceeding ---
+if (!profileError && profileData && !profileData.buildup_user_id) {
+  return res.status(400).json({
+    success: false,
+    error: 'User does not have a buildup_user_id in profiles table. Buildup Health Finding endpoint will not be called.'
+  });
+}
     } catch (err) {
       console.warn('Could not fetch user profile or contact:', err);
     }

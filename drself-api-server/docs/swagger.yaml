@@ -530,14 +530,174 @@ paths:
                     file_url:
                       type: string
                       example: https://example.com/report.pdf
+                      type: string
+                      example: "1751759596736_Mahfouz_7_2_25"
+                    status:
+                      type: string
+                      example: "completed"
+                    iv_drip:
+                      type: string
+                      example: "Detox Drip 750 ml ff ffvfgfgfgbgbv jjjjj njnjbj jjjjj"
+                    summary:
+                      type: string
+                      example: null
                     user_id:
                       type: string
-                      example: 123e4567-e89b-12d3-a456-426614174000
+                      example: "52f07a22-842c-4125-bfd0-6b83f4840499"
+                    file_url:
+                      type: string
+                      example: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf"
+                    diet_plan:
+                      type: string
+                      example: '{...}'
+                    blood_test:
+                      type: string
+                      example: '["Vitamin D test"]'
+                    created_at:
+                      type: string
+                      example: "2025-07-27T10:35:12.608384+00:00"
+                    life_style:
+                      type: string
+                      example: '[...]'
+                    updated_at:
+                      type: string
+                      example: "2025-07-29T02:05:23.701239+00:00"
+                    description:
+                      type: string
+                      example: null
+                    doctor_name:
+                      type: string
+                      example: null
+                    report_date:
+                      type: string
+                      example: "2025-07-27"
+                    hospital_name:
+                      type: string
+                      example: null
+                    summary_status:
+                      type: string
+                      example: "pending"
+                    food_supplement:
+                      type: string
+                      example: '["Glutathione 250mg Once daily","Vit D 10000 IU - Once daily"]'
+                    life_recommendation:
+                      type: string
+                      example: '[...]'
+                    summary_generated_at:
+                      type: string
+                      example: null
+                schema:
+                  type: string
+                  example: public
+                old_record:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: "627cc941-e6e9-4b56-abc2-e2d9fb475e26"
+                    title:
+                      type: string
+                      example: "1751759596736_Mahfouz_7_2_25"
+                    status:
+                      type: string
+                      example: "completed"
+                    iv_drip:
+                      type: string
+                      example: "Detox Drip 750 ml ff ffvgfgfgbgbv jjjjj njnjbj jjjjj"
+                    summary:
+                      type: string
+                      example: null
+                    user_id:
+                      type: string
+                      example: "52f07a22-842c-4125-bfd0-6b83f4840499"
+                    file_url:
+                      type: string
+                      example: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf"
+                    diet_plan:
+                      type: string
+                      example: '{...}'
+                    blood_test:
+                      type: string
+                      example: '["Vitamin D test"]'
+                    created_at:
+                      type: string
+                      example: "2025-07-27T10:35:12.608384+00:00"
+                    life_style:
+                      type: string
+                      example: '[...]'
+                    updated_at:
+                      type: string
+                      example: "2025-07-29T02:03:15.594374+00:00"
+                    description:
+                      type: string
+                      example: null
+                    doctor_name:
+                      type: string
+                      example: null
+                    report_date:
+                      type: string
+                      example: "2025-07-27"
+                    hospital_name:
+                      type: string
+                      example: null
+                    summary_status:
+                      type: string
+                      example: "pending"
+                    food_supplement:
+                      type: string
+                      example: '["Glutathione 250mg Once daily","Vit D 10000 IU - Once daily"]'
+                    life_recommendation:
+                      type: string
+                      example: '[...]'
+                    summary_generated_at:
+                      type: string
+                      example: null
             example:
-              type: INSERT
+              type: UPDATE
+              table: medical_reports
               record:
-                file_url: https://example.com/report.pdf
-                user_id: 123e4567-e89b-12d3-a456-426614174000
+                id: "627cc941-e6e9-4b56-abc2-e2d9fb475e26"
+                title: "1751759596736_Mahfouz_7_2_25"
+                status: "completed"
+                iv_drip: "Detox Drip 750 ml ff ffvfgfgfgbgbv jjjjj njnjbj jjjjj"
+                summary: null
+                user_id: "52f07a22-842c-4125-bfd0-6b83f4840499"
+                file_url: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf"
+                diet_plan: '{...}'
+                blood_test: '["Vitamin D test"]'
+                created_at: "2025-07-27T10:35:12.608384+00:00"
+                life_style: '[...]'
+                updated_at: "2025-07-29T02:05:23.701239+00:00"
+                description: null
+                doctor_name: null
+                report_date: "2025-07-27"
+                hospital_name: null
+                summary_status: "pending"
+                food_supplement: '["Glutathione 250mg Once daily","Vit D 10000 IU - Once daily"]'
+                life_recommendation: '[...]'
+                summary_generated_at: null
+              schema: public
+              old_record:
+                id: "627cc941-e6e9-4b56-abc2-e2d9fb475e26"
+                title: "1751759596736_Mahfouz_7_2_25"
+                status: "completed"
+                iv_drip: "Detox Drip 750 ml ff ffvgfgfgbgbv jjjjj njnjbj jjjjj"
+                summary: null
+                user_id: "52f07a22-842c-4125-bfd0-6b83f4840499"
+                file_url: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf"
+                diet_plan: '{...}'
+                blood_test: '["Vitamin D test"]'
+                created_at: "2025-07-27T10:35:12.608384+00:00"
+                life_style: '[...]'
+                updated_at: "2025-07-29T02:03:15.594374+00:00"
+                description: null
+                doctor_name: null
+                report_date: "2025-07-27"
+                hospital_name: null
+                summary_status: "pending"
+                food_supplement: '["Glutathione 250mg Once daily","Vit D 10000 IU - Once daily"]'
+                life_recommendation: '[...]'
+                summary_generated_at: null
       responses:
         '200':
           description: Webhook processed successfully

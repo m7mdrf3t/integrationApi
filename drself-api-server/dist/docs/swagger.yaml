@@ -7,9 +7,258 @@ tags:
   - name: Register
     description: User registration endpoints
   - name: Webhook
-    description: Medical report webhook endpoints
+    description: Medical report webhook endpoints for handling medical report updates and inserts
+  - name: User Management
+    description: User management endpoints
 paths:
   /api/v1/register:
+    post:
+      tags:
+        - Register
+      summary: Register a new user in the Dr.Self system
+      description: >
+        Registers a user by forwarding the request to a Supabase Edge Function.
+        Expects a JSON body with fullName, email, and buildupUserId.
+      parameters:
+        - in: header
+          name: x-drself-auth
+          required: true
+          schema:
+            type: string
+          description: Custom API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullName
+                - email
+                - buildupUserId
+              properties:
+                fullName:
+                  type: string
+                  example: Sarah Hany
+                email:
+                  type: string
+                  format: email
+                  example: sarah.hany@example.com
+                buildupUserId:
+                  type: string
+                  example: buildup_abc123
+            example:
+              fullName: Sarah Hany
+              email: sarah.hany@example.com
+              buildupUserId: buildup_abc123
+
+  /api/v1/medical-report-webhook:
+    post:
+      tags:
+        - Webhook
+      summary: Process medical report webhook events
+      description: >
+        Handles webhook events for medical reports, forwarding them to the Buildup gateway.
+        Only supports INSERT and UPDATE event types.
+      parameters:
+        - in: header
+          name: x-drself-auth
+          required: true
+          schema:
+            type: string
+          description: Custom API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - record
+              properties:
+                type:
+                  type: string
+                  enum: [INSERT, UPDATE]
+                  description: Type of event (INSERT or UPDATE)
+                record:
+                  type: object
+                  required:
+                    - file_url
+                    - user_id
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      example: 5ba55b4a-a980-49e6-82eb-b7a84ad17a36
+                    title:
+                      type: string
+                      example: Mahfouz_7_2_25
+                    status:
+                      type: string
+                      example: completed
+                    iv_drip:
+                      type: string
+                      example: bjvhvghv
+                    summary:
+                      type: string
+                      nullable: true
+                    user_id:
+                      type: string
+                      format: uuid
+                      example: 23d2bf91-f9d0-4a20-901c-59f2b7b1bacb
+                    file_url:
+                      type: string
+                      format: uri
+                      example: https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/23d2bf91-f9d0-4a20-901c-59f2b7b1bacb/1753569790450_Mahfouz_7_2_25.pdf
+                    diet_plan:
+                      type: string
+                      example: Low carb diet
+                    blood_test:
+                      type: string
+                      example: fdfdf
+                    created_at:
+                      type: string
+                      format: date-time
+                      example: 2025-07-26T22:43:10.988526+00:00
+                    life_style:
+                      type: string
+                      example: Active lifestyle
+                    updated_at:
+                      type: string
+                      format: date-time
+                      example: 2025-07-26T23:19:56.60343+00:00
+                    description:
+                      type: string
+                      example: build up
+                    doctor_name:
+                      type: string
+                      nullable: true
+                      example: Dr. Smith
+                    report_date:
+                      type: string
+                      format: date
+                      example: 2025-07-26
+                    hospital_name:
+                      type: string
+                      nullable: true
+                      example: City Hospital
+                    summary_status:
+                      type: string
+                      example: pending
+                    food_supplement:
+                      type: string
+                      example: Vitamin D, Omega-3
+                    life_recommendation:
+                      type: string
+                      example: Exercise regularly
+                    summary_generated_at:
+                      type: string
+                      format: date-time
+                      nullable: true
+                old_record:
+                  type: object
+                  description: Previous state of the record (optional for INSERT events)
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    title:
+                      type: string
+                    status:
+                      type: string
+                    iv_drip:
+                      type: string
+                    summary:
+                      type: string
+                      nullable: true
+                    user_id:
+                      type: string
+                      format: uuid
+                    file_url:
+                      type: string
+                      format: uri
+                    diet_plan:
+                      type: string
+                    blood_test:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+                    life_style:
+                      type: string
+                    updated_at:
+                      type: string
+                      format: date-time
+                    description:
+                      type: string
+                    doctor_name:
+                      type: string
+                      nullable: true
+                    report_date:
+                      type: string
+                      format: date
+                    hospital_name:
+                      type: string
+                      nullable: true
+                    summary_status:
+                      type: string
+                    food_supplement:
+                      type: string
+                    life_recommendation:
+                      type: string
+                    summary_generated_at:
+                      type: string
+                      format: date-time
+                      nullable: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  url:
+                    type: string
+                    format: uri
+                    example: https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/23d2bf91-f9d0-4a20-901c-59f2b7b1bacb/1753569790450_Mahfouz_7_2_25.pdf
+                  webhook_called:
+                    type: boolean
+                    example: true
+                  webhook_response:
+                    type: string
+                    example: |-
+                      {"message": "Error in workflow"}
+                  webhook_status:
+                    type: integer
+                    example: 500
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: 'Invalid payload structure'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: 'Authorization header required'
     post:
       tags:
         - Register
@@ -82,8 +331,44 @@ paths:
               example:
                 success: false
                 error: Missing required fields: fullName, email, buildupUserId
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unauthorized: Invalid or missing API key
+              example:
+                error: Unauthorized: Invalid or missing API key
+        '404':
+          description: User not found or edge function not available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+              example:
+                error: User not found
+        '422':
+          description: Validation error from edge function
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Validation failed
+              example:
+                error: Validation failed
         '500':
-          description: Internal Server Error
+          description: Internal Server Error - Edge function error or server error
           content:
             application/json:
               schema:
@@ -98,20 +383,136 @@ paths:
               example:
                 success: false
                 error: Internal server error 
+  /api/v1/update-buildup-user-id:
+    post:
+      tags:
+        - User Management
+      summary: Update Buildup user ID for a user
+      description: Updates the Buildup user ID for a user identified by email and phone number
+      parameters:
+        - in: header
+          name: x-drself-auth
+          required: true
+          schema:
+            type: string
+          description: Custom API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - phoneNumber
+                - buildUp_user_id
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: "test@example.com"
+                phoneNumber:
+                  type: string
+                  description: User's phone number
+                  example: "1234567890"
+                buildUp_user_id:
+                  type: string
+                  description: The Buildup user ID to assign
+                  example: "test-id-123"
+            example:
+              email: "test@example.com"
+              phoneNumber: "1234567890"
+              buildUp_user_id: "test-id-123"
+      responses:
+        '200':
+          description: Buildup user ID updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Buildup user ID updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                        description: The user ID that was updated
+                        example: "550e8400-e29b-41d4-a716-446655440000"
+                      buildUp_user_id:
+                        type: string
+                        description: The new Buildup user ID
+                        example: "test-id-123"
+              example:
+                success: true
+                message: "Buildup user ID updated successfully"
+                data:
+                  user_id: "550e8400-e29b-41d4-a716-446655440000"
+                  buildUp_user_id: "test-id-123"
+        '400':
+          description: Bad request - Invalid input data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid email format"
+              example:
+                error: "Invalid email format"
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Unauthorized: Invalid or missing API key"
+              example:
+                error: "Unauthorized: Invalid or missing API key"
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "User not found"
+              example:
+                error: "User not found"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Failed to update Buildup user ID"
+              example:
+                error: "Failed to update Buildup user ID"
+              example:
+                success: false
+                error: Internal server error 
   /api/v1/medical-report-webhook:
     post:
       tags:
         - Webhook
       summary: Medical Report Webhook
       description: >
-        Receives webhook events for medical report file uploads/updates. Requires Authorization header. Processes the payload and may call an external webhook if conditions are met.
-      parameters:
-        - in: header
-          name: Authorization
-          required: true
-          schema:
-            type: string
-          description: Bearer token for authentication
+        Receives webhook events for medical report file uploads/updates. Processes the payload and may call an external webhook if conditions are met.
       requestBody:
         required: true
         content:

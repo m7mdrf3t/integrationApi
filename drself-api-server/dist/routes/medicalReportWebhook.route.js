@@ -10,96 +10,137 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
-const supabase_js_1 = require("@supabase/supabase-js");
 const router = (0, express_1.Router)();
-router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const authHeader = req.headers['authorization'];
-        if (!authHeader) {
-            return res.status(401).json({ error: 'Authorization header required' });
+// OAuth token cache
+let cachedToken = null;
+// Function to get OAuth token
+function getOAuthToken() {
+    return __awaiter(this, void 0, void 0, function* () {
+        // Check if we have a valid cached token
+        if (cachedToken && Date.now() < cachedToken.expiresAt) {
+            return cachedToken.token;
         }
-        const supabaseClient = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
-            global: {
+        try {
+            console.log('Getting new OAuth token...');
+            const tokenResponse = yield fetch('https://sts.x-inity.com/connect/token', {
+                method: 'POST',
                 headers: {
-                    Authorization: authHeader
-                }
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'client_id=dr_self&client_secret=]SKI8NAJaGrc1ai&grant_type=client_credentials'
+            });
+            if (!tokenResponse.ok) {
+                throw new Error(`Token request failed: ${tokenResponse.status} ${tokenResponse.statusText}`);
             }
-        });
+            const tokenData = yield tokenResponse.json();
+            // Cache the token (expires in 1 hour, but we'll refresh after 50 minutes)
+            const expiresAt = Date.now() + (50 * 60 * 1000); // 50 minutes
+            cachedToken = {
+                token: tokenData.access_token,
+                expiresAt
+            };
+            console.log('OAuth token obtained successfully');
+            return tokenData.access_token;
+        }
+        catch (error) {
+            console.error('Error getting OAuth token:', error);
+            throw error;
+        }
+    });
+}
+router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('Medical report webhook endpoint triggered');
+    // Require custom auth header (same as other routes)
+    const customKey = req.headers['x-drself-auth'];
+    const expectedKey = process.env.DRSELF_API_KEY;
+    if (!customKey || customKey !== expectedKey) {
+        return res.status(401).json({ error: 'Authorization header required' });
+    }
+    try {
         const payload = req.body;
         console.log('Webhook payload received:', JSON.stringify(payload, null, 2));
-        if ((payload.type === 'INSERT' || payload.type === 'UPDATE') && payload.record && payload.record.file_url) {
-            const fileUrl = payload.record.file_url;
-            const userId = payload.record.user_id;
-            console.log(`Processing record for user: ${userId}, file: ${fileUrl}`);
-            if (!userId) {
-                console.log('No user_id found in the medical report');
-                return res.status(400).json({ success: false, error: 'No user_id found' });
-            }
-            const { data: profileData, error: profileError } = yield supabaseClient
-                .from('profiles')
-                .select('buildup_user_id')
-                .eq('id', userId)
-                .single();
-            if (profileError) {
-                console.error('Error fetching profile:', profileError);
-                return res.status(500).json({ success: false, error: 'Profile fetch error', details: profileError.message });
-            }
-            if (profileData && profileData.buildup_user_id) {
-                console.log(`Valid update detected for user with buildup_user_id: ${profileData.buildup_user_id}`);
-                try {
-                    const webhookResponse = yield fetch('https://n8n-railway-production-53dd.up.railway.app/webhook/buildup', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            UserID: userId,
-                            fileUrl: fileUrl,
-                            buildup_user_id: profileData.buildup_user_id
-                        })
-                    });
-                    const webhookResult = yield webhookResponse.text();
-                    console.log('Webhook response:', webhookResult);
-                    console.log('Webhook status:', webhookResponse.status);
-                    return res.json({
-                        success: true,
-                        url: fileUrl,
-                        webhook_called: true,
-                        webhook_response: webhookResult,
-                        webhook_status: webhookResponse.status
-                    });
-                }
-                catch (webhookError) {
-                    console.error('Error calling webhook:', webhookError);
-                    return res.status(500).json({
-                        success: false,
-                        url: fileUrl,
-                        webhook_called: false,
-                        webhook_error: webhookError.message
-                    });
-                }
-            }
-            else {
-                console.log('User does not have a buildup_user_id in profiles');
-                return res.json({
-                    success: false,
-                    message: 'User does not have buildup_user_id'
-                });
-            }
-        }
-        else {
-            console.log('No file_url found or invalid event type');
-            return res.json({
+        // Validate payload structure
+        if (!payload.type || !payload.record) {
+            return res.status(400).json({
                 success: false,
-                message: 'No file_url found or invalid event type'
+                error: 'Invalid payload structure'
             });
         }
+        // Only process INSERT and UPDATE events
+        if (payload.type !== 'INSERT' && payload.type !== 'UPDATE') {
+            return res.json({
+                success: false,
+                message: 'Event type not supported'
+            });
+        }
+        // Check if we have the required fields
+        if (!payload.record.file_url || !payload.record.user_id) {
+            return res.status(400).json({
+                success: false,
+                error: 'Missing required fields: file_url or user_id'
+            });
+        }
+        const { file_url, user_id, title, status, description, id, iv_drip, summary, diet_plan, blood_test, created_at, life_style, updated_at, doctor_name, report_date, hospital_name, summary_status, food_supplement, life_recommendation, summary_generated_at } = payload.record;
+        console.log(`Processing ${payload.type} event for user: ${user_id}, file: ${file_url}`);
+        // Get OAuth token
+        const accessToken = yield getOAuthToken();
+        // Prepare the payload for Buildup gateway
+        const buildupPayload = {
+            id,
+            title,
+            status,
+            iv_drip,
+            summary,
+            user_id,
+            file_url,
+            diet_plan,
+            blood_test,
+            created_at,
+            life_style,
+            updated_at,
+            description,
+            doctor_name,
+            report_date,
+            hospital_name,
+            summary_status,
+            food_supplement,
+            life_recommendation,
+            summary_generated_at,
+            event_type: payload.type,
+            timestamp: new Date().toISOString()
+        };
+        console.log('Sending payload to Buildup gateway:', JSON.stringify(buildupPayload, null, 2));
+        // Send to Buildup gateway
+        const webhookResponse = yield fetch('https://buildup-gateway.x-inity.com/IntegrationAPI/v1/HealthInsights/Submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify(buildupPayload)
+        });
+        const webhookResult = yield webhookResponse.text();
+        console.log('Buildup gateway response:', {
+            status: webhookResponse.status,
+            statusText: webhookResponse.statusText,
+            body: webhookResult
+        });
+        // Return response
+        return res.json({
+            success: true,
+            event_type: payload.type,
+            user_id,
+            file_url,
+            buildup_gateway_status: webhookResponse.status,
+            buildup_gateway_response: webhookResult,
+            sent_payload: buildupPayload
+        });
     }
     catch (error) {
-        console.error('Error:', error);
+        console.error('Error processing webhook:', error);
         return res.status(500).json({
-            error: error.message,
-            stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            success: false,
+            error: error.message
         });
     }
 }));

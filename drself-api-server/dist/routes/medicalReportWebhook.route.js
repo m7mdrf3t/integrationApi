@@ -11,6 +11,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const router = (0, express_1.Router)();
+// --- Supabase client for user profile lookup ---
+const supabase_js_1 = require("@supabase/supabase-js");
+const supabase = (0, supabase_js_1.createClient)(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 // OAuth token cache
 let cachedToken = null;
 // Function to get OAuth token
@@ -80,36 +83,146 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
                 error: 'Missing required fields: file_url or user_id'
             });
         }
-        const { file_url, user_id, title, status, description, id, iv_drip, summary, diet_plan, blood_test, created_at, life_style, updated_at, doctor_name, report_date, hospital_name, summary_status, food_supplement, life_recommendation, summary_generated_at } = payload.record;
-        console.log(`Processing ${payload.type} event for user: ${user_id}, file: ${file_url}`);
+        const record = payload.record;
+        console.log(`Processing ${payload.type} event for user: ${record.user_id}, file: ${record.file_url}`);
         // Get OAuth token
         const accessToken = yield getOAuthToken();
-        // Prepare the payload for Buildup gateway
-        const buildupPayload = {
-            id,
-            title,
-            status,
-            iv_drip,
-            summary,
-            user_id,
-            file_url,
-            diet_plan,
-            blood_test,
-            created_at,
-            life_style,
-            updated_at,
-            description,
-            doctor_name,
-            report_date,
-            hospital_name,
-            summary_status,
-            food_supplement,
-            life_recommendation,
-            summary_generated_at,
-            event_type: payload.type,
-            timestamp: new Date().toISOString()
+        // --- Start of Enhanced Mapping Logic ---
+        // 1. Get user profile from Supabase (if needed)
+        let userProfile = {};
+        try {
+            const { data, error } = yield supabase
+                .from('users') // Adjust table name if needed
+                .select('email, gender, age, date_of_birth, blood_group, weight_kg, height_m')
+                .eq('id', record.user_id)
+                .single();
+            if (!error && data)
+                userProfile = data;
+        }
+        catch (err) {
+            console.warn('Could not fetch user profile:', err);
+        }
+        // Parse ivDrip as array of objects { name, dosage, frequency }
+        let ivDripArray = [];
+        if (record.iv_drip) {
+            try {
+                const parsed = JSON.parse(record.iv_drip);
+                if (Array.isArray(parsed)) {
+                    ivDripArray = parsed.map((item) => ({
+                        name: item.name || item.Name || '',
+                        dosage: item.dosage || item.Dosage || '',
+                        frequency: item.frequency || item.Frequency || ''
+                    }));
+                }
+                else {
+                    ivDripArray = [];
+                }
+            }
+            catch (_a) {
+                ivDripArray = record.iv_drip.split(',').map((item) => {
+                    const parts = item.trim().split(' ');
+                    return {
+                        name: parts.slice(0, -2).join(' '),
+                        dosage: parts[parts.length - 2] || '',
+                        frequency: parts[parts.length - 1] || 'Once'
+                    };
+                });
+            }
+        }
+        // Parse foodSupplement as array of objects { name, dosage, frequency }
+        let foodSupplementArray = [];
+        if (record.food_supplement) {
+            try {
+                const parsed = JSON.parse(record.food_supplement);
+                if (Array.isArray(parsed)) {
+                    foodSupplementArray = parsed.map((item) => ({
+                        name: item.name || item.Name || '',
+                        dosage: item.dosage || item.Dosage || '',
+                        frequency: item.frequency || item.Frequency || ''
+                    }));
+                }
+                else {
+                    foodSupplementArray = [];
+                }
+            }
+            catch (_b) {
+                foodSupplementArray = record.food_supplement.split(',').map((item) => {
+                    const match = item.match(/^(.+?)\s+(\d+\s*\w+)\s*-?\s*(.+)$/);
+                    return match
+                        ? { name: match[1].trim(), dosage: match[2].trim(), frequency: match[3].trim() }
+                        : { name: item.trim(), dosage: '', frequency: '' };
+                });
+            }
+        }
+        // Parse providerFindings
+        let providerFindings = [];
+        if (record.life_style) {
+            try {
+                const parsed = JSON.parse(record.life_style);
+                providerFindings = parsed.map((item) => ({
+                    displayTitle: item.displayTitle || item.title || 'Title to be displayed in mobile',
+                    shortDescription: item.shortDescription || item.description || null,
+                    longDescription: item.longDescription || item.description || null,
+                    symptoms: item.symptoms || [],
+                    recommendationDisplayTitle: item.recommendationDisplayTitle || item.displayTitle || 'Title to be displayed in mobile',
+                    recommendations: item.recommendations || []
+                }));
+            }
+            catch (_c) {
+                providerFindings = [];
+            }
+        }
+        // Parse providerRecommendations
+        let providerRecommendationsArray = [];
+        if (record.life_recommendation) {
+            try {
+                const parsed = JSON.parse(record.life_recommendation);
+                providerRecommendationsArray = parsed.map((category) => ({
+                    title: category.title || '',
+                    recommendation: Array.isArray(category.recommendation)
+                        ? category.recommendation.map((rec) => rec.replace(/<\/?p>/g, '').replace(/<\/?strong>/g, '').replace(/<br>/g, '\n').trim())
+                        : []
+                }));
+            }
+            catch (_d) {
+                providerRecommendationsArray = [];
+            }
+        }
+        // Build patientInfo and scanInfo
+        const patientInfo = {
+            email: record.email || userProfile.email || null,
+            userId: record.user_id,
+            gender: record.gender || userProfile.gender || null,
+            age: record.age || userProfile.age || null,
+            date_of_birth: record.date_of_birth || userProfile.date_of_birth || null,
+            date_of_test: record.date_of_test || null,
+            blood_group: record.blood_group || userProfile.blood_group || null,
+            weight_kg: record.weight_kg || userProfile.weight_kg || null,
+            height_m: record.height_m || userProfile.height_m || null
         };
-        console.log('Sending payload to Buildup gateway:', JSON.stringify(buildupPayload, null, 2));
+        const scanInfo = {
+            title: record.title,
+            description: record.description,
+            report_date: record.report_date,
+            summary_status: record.summary_status,
+            summary: record.summary,
+            summary_generated_at: record.summary_generated_at,
+            doctor_name: record.doctor_name,
+            hospital_name: record.hospital_name,
+            file_url: record.file_url
+        };
+        // Compose the final nested payload
+        const buildupPayload = {
+            id: record.id,
+            patientInfo,
+            scanInfo,
+            ivDrip: ivDripArray,
+            foodSupplement: foodSupplementArray,
+            providerFindings,
+            providerRecommendations: providerRecommendationsArray
+        };
+        // --- End of Unified Mapping Logic ---
+        console.log('Sending mapped payload to Buildup gateway:', JSON.stringify(buildupPayload, null, 2));
         // Send to Buildup gateway
         const webhookResponse = yield fetch('https://buildup-gateway.x-inity.com/IntegrationAPI/v1/HealthInsights/Submit', {
             method: 'POST',
@@ -125,12 +238,12 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
             statusText: webhookResponse.statusText,
             body: webhookResult
         });
-        // Return response
+        // Return response with nested payload
         return res.json({
             success: true,
             event_type: payload.type,
-            user_id,
-            file_url,
+            user_id: record.user_id,
+            file_url: record.file_url,
             buildup_gateway_status: webhookResponse.status,
             buildup_gateway_response: webhookResult,
             sent_payload: buildupPayload

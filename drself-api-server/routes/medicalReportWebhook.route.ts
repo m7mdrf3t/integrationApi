@@ -215,7 +215,7 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     const patientInfo = {
       email: userContact.email || record.email || userProfile.email || null,
       number: userContact.phone || null,
-      userid: (userContact.buildup_user_id || record.user_id),
+      userid: (userContact.buildup_user_id),
       gender: record.gender || userProfile.gender || null,
       age: record.age || userProfile.age || null,
       date_of_birth: record.date_of_birth || userProfile.date_of_birth || null,

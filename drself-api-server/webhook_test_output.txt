@@ -1,71 +1,19 @@
-#!/bin/bash
-
-# Set your webhook URL here
-WEBHOOK_URL="http://localhost:3009/api/medicalReportWebhook"
-
-# Write the payload to a file
-cat <<EOF > payload.json
-{
-  "type": "UPDATE",
-  "table": "medical_reports",
-  "record": {
-    "id": "627cc941-e6e9-4b56-abc2-e2d9fb475e26",
-    "title": "1751759596736_Mahfouz_7_2_25",
-    "status": "completed",
-    "iv_drip": "Detox Drip 750 ml ff ffv",
-    "summary": null,
-    "user_id": "52f07a22-842c-4125-bfd0-6b83f4840499",
-    "file_url": "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf",
-    "diet_plan": "[TRUNCATED]",
-    "blood_test": "[\"Vitamin D test\"]",
-    "created_at": "2025-07-27T10:35:12.608384+00:00",
-    "life_style": "[TRUNCATED]",
-    "updated_at": "2025-07-29T02:05:23.701239+00:00",
-    "description": null,
-    "doctor_name": null,
-    "report_date": "2025-07-27",
-    "hospital_name": null,
-    "summary_status": "pending",
-    "food_supplement": "[\"Glutathione 250mg Once daily\",\"Vit D 10000 IU - Once daily\"]",
-    "life_recommendation": "[TRUNCATED]",
-    "summary_generated_at": null
-  },
-  "schema": "public",
-  "old_record": {
-    "id": "627cc941-e6e9-4b56-abc2-e2d9fb475e26",
-    "title": "1751759596736_Mahfouz_7_2_25",
-    "status": "completed",
-    "iv_drip": "Detox Drip 750 ml ff ffvgfgfgbgbv jjjjj njnjbj jjjjj",
-    "summary": null,
-    "user_id": "52f07a22-842c-4125-bfd0-6b83f4840499",
-    "file_url": "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf",
-    "diet_plan": "[TRUNCATED]",
-    "blood_test": "[\"Vitamin D test\"]",
-    "created_at": "2025-07-27T10:35:12.608384+00:00",
-    "life_style": "[TRUNCATED]",
-    "updated_at": "2025-07-29T02:03:15.594374+00:00",
-    "description": null,
-    "doctor_name": null,
-    "report_date": "2025-07-27",
-    "hospital_name": null,
-    "summary_status": "pending",
-    "food_supplement": "[\"Glutathione 250mg Once daily\",\"Vit D 10000 IU - Once daily\"]",
-    "life_recommendation": "[TRUNCATED]",
-    "summary_generated_at": null
-  }
-}
-EOF
-
-# Send the POST request
-curl -X POST "$WEBHOOK_URL" \
-  -H "Content-Type: application/json" \
-  -d @payload.json
-
-
-echo "🧪 Testing Medical Report Webhook..."
-
-# Test payload with all parameters
-PAYLOAD='{
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100  2164  100   164  100  2000  30471   362k --:--:-- --:--:-- --:--:--  704k
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>Cannot POST /api/medicalReportWebhook</pre>
+</body>
+</html>
+🧪 Testing Medical Report Webhook...
+📤 Sending payload to webhook...
+Payload: {
       "type": "UPDATE",
       "table": "medical_reports",
       "record": {
@@ -113,19 +61,15 @@ PAYLOAD='{
         "life_recommendation": "[{\"title\":\"MINERAL\",\"recommendation\":[\"<p><strong>Phosphorus Borderline Deficiency</strong></p><p><strong>S &amp; S include:</strong></p><p>Tooth decay, Fatigue, Vit D deficiency, Muscle weakness</p><p><strong>Phosphorus sources:</strong></p><p>Meats, Poultry, Fish, Nuts, Beans</p>\",\"<p><strong>Chromium Borderline Deficiency</strong></p><p><strong>S&amp; S include: </strong></p><p>Weight gain, Fatigue.Metabolism weakness</p><p><strong>Chromium sources:</strong></p><p>Broccoli, Potatoes, Green beans.Beef and Poultry. Bananas, Grape Juice.</p>\",\"<p><strong>Fluoride Border line Deficiency </strong></p><p><strong>S &amp; S include: </strong></p><p>Tooth decay, Cavities</p><p><strong> Fluoride sources: </strong></p><p>Crab , Oysters, Potatoes., Toothpaste, Black tea.</p>\"]},{\"title\":\"RATIOS\",\"recommendation\":[\"<p><strong>Ca/P Unbalanced ratio: </strong></p><p><strong>S&amp;S may include:</strong></p><p>Vit D Deficiency, Parathyroid ,Poor usage of Calcium</p>\",\"<p><strong>K/Na Unbalanced ratio: </strong></p><p><strong>S&amp;S may include:</strong></p><p>Excess consumption of salt, Inflammation, Chronic stress</p>\"]},{\"title\":\"HEAVY METAL\",\"recommendation\":[\"<p><strong>Cadmium Very High</strong></p><p><strong>S &amp; S Include:</strong></p><p>Bronchitis, bone fractures, immunity weakness,Slow wound healing</p><p><strong>Sources</strong>:</p><p>Cigarette , car exhaust fume ,instant coffee , Oud incense ,paint,chocolate.</p>\",\"<p><strong>Mercury Very High</strong></p><p><strong>Sources:</strong></p><p>Dental amalgams. Tuna fish,Medication.Plastic , Ink and Paint</p><p><strong>S &amp; S Include:</strong></p><p>Muscle weakness, fatigue,Stomach ache.</p>\"]},{\"title\":\"VITAMINS\",\"recommendation\":[\"<p><strong>Vitamin D - Insufficiency </strong></p><p><strong>S &amp; S include:</strong></p><p>Getting sick or infected often. Fatigue and tiredness. Bone and back pain. Depression. Impaired wound healing. Bone loss. Hair loss. Muscle pain.</p><p><strong>Vitamin D sources:</strong></p><p>Tuna, mackerel, and salmon. Dairy products, Orange juice, Soy milk, and Cereals. Beef liver. Cheese. Egg yolks.</p>\"]}]",
         "summary_generated_at": null
     }
-  }'
+  }
 
-echo "📤 Sending payload to webhook..."
-echo "Payload: $PAYLOAD"
-echo ""
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+curl: (7) Failed to connect to localhost port 3000 after 3 ms: Couldn't connect to server
 
-# Make the request
-curl -X POST \
-  http://localhost:3000/api/v1/medical-report-webhook \
-  -H "Content-Type: application/json" \
-  -H "x-drself-auth: drself_sk_4e7b1c2f8a9d4e3b9f6a1b2c3d4e5f6a" \
-  -d "$PAYLOAD" \
-  -w "\n\nHTTP Status: %{http_code}\nTotal Time: %{time_total}s\n"
 
-echo ""
-echo "✅ Test completed!" 
+HTTP Status: 000
+Total Time: 0.003782s
+
+✅ Test completed!

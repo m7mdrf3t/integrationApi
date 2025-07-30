@@ -52,6 +52,7 @@ function getOAuthToken() {
     });
 }
 router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log('V2.1 - MAPPING BUILDUP_USER_ID - Webhook triggered.'); // <-- Version-specific log
     console.log('Medical report webhook endpoint triggered');
     // Require custom auth header (same as other routes)
     const customKey = req.headers['x-drself-auth'];
@@ -103,11 +104,26 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
             // Fetch from 'profiles' table for number and email
             const { data: profileData, error: profileError } = yield supabase
                 .from('profiles')
-                .select('email, phone')
+                .select('email, phone, buildup_user_id')
                 .eq('id', record.user_id)
                 .single();
-            if (!profileError && profileData)
-                userContact = profileData;
+            console.log('[DEBUG] Supabase profiles query result:', { profileData, profileError });
+            // --- NEW: Hard failure if profile is not found ---
+            if (profileError || !profileData) {
+                console.error('CRITICAL: Could not find user profile in `profiles` table for user_id:', record.user_id);
+                return res.status(404).json({
+                    success: false,
+                    error: `User profile not found for user_id: ${record.user_id}`
+                });
+            }
+            userContact = profileData;
+            // --- CRUCIAL: Check for buildup_user_id before proceeding ---
+            if (!profileError && profileData && !profileData.buildup_user_id) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'User does not have a buildup_user_id in profiles table. Buildup Health Finding endpoint will not be called.'
+                });
+            }
         }
         catch (err) {
             console.warn('Could not fetch user profile or contact:', err);
@@ -202,7 +218,7 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
         const patientInfo = {
             email: userContact.email || record.email || userProfile.email || null,
             number: userContact.phone || null,
-            userId: record.user_id,
+            userId: userContact.buildup_user_id,
             gender: record.gender || userProfile.gender || null,
             age: record.age || userProfile.age || null,
             date_of_birth: record.date_of_birth || userProfile.date_of_birth || null,

@@ -15,7 +15,6 @@
   "description": "",
   "dependencies": {
     "@supabase/supabase-js": "^2.52.1",
-    "@types/yamljs": "^0.2.34",
     "cors": "^2.8.5",
     "dotenv": "^17.2.0",
     "express": "^5.1.0",
@@ -24,10 +23,12 @@
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
+    "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.3",
     "@types/node": "^24.1.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/yamljs": "^0.2.34",
     "cpx": "^1.5.0",
     "node-fetch": "^2.7.0",
     "ts-node": "^10.9.2",

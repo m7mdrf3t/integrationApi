@@ -31,6 +31,12 @@ router.post('/update-buildup-user-id', (req, res) => __awaiter(void 0, void 0, v
         if (!emailRegex.test(email)) {
             return res.status(400).json({ error: 'Invalid email format' });
         }
+        // Log the payload being sent
+        console.log('[updateBuildUpUserId] Sending payload to Supabase edge function:', {
+            email,
+            phoneNumber,
+            buildUp_user_id
+        });
         // Call the Supabase edge function
         const response = yield fetch(`${process.env.SUPABASE_URL}/functions/v1/update-buildup-user-id`, {
             method: 'POST',
@@ -45,6 +51,7 @@ router.post('/update-buildup-user-id', (req, res) => __awaiter(void 0, void 0, v
             })
         });
         const text = yield response.text();
+        console.log('[updateBuildUpUserId] Response from Supabase edge function:', text);
         let data;
         try {
             data = JSON.parse(text);

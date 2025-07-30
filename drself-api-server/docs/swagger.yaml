@@ -52,6 +52,47 @@ paths:
               email: sarah.hany@example.com
               buildupUserId: buildup_abc123
 
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  userId:
+                    type: string
+                    example: 123e4567-e89b-12d3-a456-426614174000
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Missing required field: email
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid API key
+
   /api/v1/medical-report-webhook:
     post:
       tags:

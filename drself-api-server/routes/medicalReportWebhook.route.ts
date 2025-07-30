@@ -96,7 +96,7 @@ router.post('/medical-report-webhook', async (req, res) => {
     // --- Start of Enhanced Mapping Logic ---
     // 1. Get user profile from Supabase (if needed)
     let userProfile: any = {};
-    let userContact: { email?: string; phone?: string } = {};
+    let userContact: { email?: string; phone?: string; buildup_user_id?: string } = {};
     try {
       // Fetch from 'users' table (existing logic)
       const { data: userData, error: userError } = await supabase
@@ -215,7 +215,7 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     const patientInfo = {
       email: userContact.email || record.email || userProfile.email || null,
       number: userContact.phone || null,
-      userId: record.user_id,
+      userid: (userContact.buildup_user_id || record.user_id),
       gender: record.gender || userProfile.gender || null,
       age: record.age || userProfile.age || null,
       date_of_birth: record.date_of_birth || userProfile.date_of_birth || null,

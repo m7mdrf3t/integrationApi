@@ -26,6 +26,13 @@ router.post('/update-buildup-user-id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid email format' });
     }
 
+    // Log the payload being sent
+    console.log('[updateBuildUpUserId] Sending payload to Supabase edge function:', {
+      email,
+      phoneNumber,
+      buildUp_user_id
+    });
+
     // Call the Supabase edge function
     const response = await fetch(`${process.env.SUPABASE_URL}/functions/v1/update-buildup-user-id`, {
       method: 'POST',
@@ -41,6 +48,7 @@ router.post('/update-buildup-user-id', async (req, res) => {
     });
 
     const text = await response.text();
+    console.log('[updateBuildUpUserId] Response from Supabase edge function:', text);
     let data;
     try {
       data = JSON.parse(text);

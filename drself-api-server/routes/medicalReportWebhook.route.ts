@@ -249,7 +249,6 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     };
 
     // Compose the final nested payload
-    console.log('[CRITICAL_LOG] Final patientInfo being sent:', patientInfo);
 
     const buildupPayload = {
       id: record.id,

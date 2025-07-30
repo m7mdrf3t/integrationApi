@@ -166,18 +166,57 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     // Parse foodSupplement as array of objects { name, dosage, frequency }
     let foodSupplementArray: any[] = [];
     if (record.food_supplement) {
+      console.log('=== FOOD SUPPLEMENT PARSING DEBUG ===');
+      console.log('Original food_supplement:', record.food_supplement);
+      
       try {
         const parsed = JSON.parse(record.food_supplement);
+        console.log('Parsed JSON:', parsed);
+        
         if (Array.isArray(parsed)) {
-          foodSupplementArray = parsed.map((item: any) => ({
-            name: item.name || item.Name || '',
-            dosage: item.dosage || item.Dosage || '',
-            frequency: item.frequency || item.Frequency || ''
-          }));
+          foodSupplementArray = parsed.map((item: any) => {
+            console.log('Processing item:', item, 'Type:', typeof item);
+            
+            // If item is already an object with name, dosage, frequency
+            if (typeof item === 'object' && item !== null) {
+              const result = {
+                name: item.name || item.Name || '',
+                dosage: item.dosage || item.Dosage || '',
+                frequency: item.frequency || item.Frequency || ''
+              };
+              console.log('Object result:', result);
+              return result;
+            }
+            // If item is a string, parse it
+            if (typeof item === 'string') {
+              // Try to match pattern like "Glutathione 250mg Once daily"
+              const match = item.match(/^(.+?)\s+(\d+\s*\w+)\s*-?\s*(.+)$/);
+              if (match) {
+                const result = { 
+                  name: match[1].trim(), 
+                  dosage: match[2].trim(), 
+                  frequency: match[3].trim() 
+                };
+                console.log('String match result:', result);
+                return result;
+              }
+              // If no match, treat the whole string as name
+              const result = { 
+                name: item.trim(), 
+                dosage: '', 
+                frequency: '' 
+              };
+              console.log('String no-match result:', result);
+              return result;
+            }
+            return { name: '', dosage: '', frequency: '' };
+          });
         } else {
           foodSupplementArray = [];
         }
-      } catch {
+      } catch (e) {
+        console.error("Error parsing food_supplement:", e);
+        // Fallback to comma-separated parsing
         foodSupplementArray = record.food_supplement.split(',').map((item: string) => {
           const match = item.match(/^(.+?)\s+(\d+\s*\w+)\s*-?\s*(.+)$/);
           return match
@@ -185,6 +224,8 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
             : { name: item.trim(), dosage: '', frequency: '' };
         });
       }
+      
+      console.log('Final foodSupplementArray:', JSON.stringify(foodSupplementArray, null, 2));
     }
 
     // Parse providerFindings
@@ -192,15 +233,80 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     if (record.life_style) {
       try {
         const parsed = JSON.parse(record.life_style);
-        providerFindings = parsed.map((item: any) => ({
-          displayTitle: item.displayTitle || item.title || 'Title to be displayed in mobile',
-          shortDescription: item.shortDescription || item.description || null,
-          longDescription: item.longDescription || item.description || null,
-          symptoms: item.symptoms || [],
-          recommendationDisplayTitle: item.recommendationDisplayTitle || item.displayTitle || 'Title to be displayed in mobile',
-          recommendations: item.recommendations || []
-        }));
-      } catch {
+        if (Array.isArray(parsed)) {
+          providerFindings = parsed.map((htmlString: string) => {
+            // Extract displayTitle (text within the first <strong> tag with color red)
+            const titleMatch = htmlString.match(/<strong[^>]*color:\s*rgb\(255,\s*0,\s*0\)[^>]*>([^<]+)<\/strong>/i);
+            const displayTitle = titleMatch ? decodeHtmlEntities(stripHtmlAndNormalize(titleMatch[1])) : 'Title to be displayed in mobile';
+
+            // Extract description (text between first <p> after title and before Symptoms or next strong tag)
+            let shortDescription = null;
+            let longDescription = null;
+            
+            // Find all paragraphs and extract the description from the second paragraph
+            const paragraphs = htmlString.match(/<p>.*?<\/p>/g) || [];
+            if (paragraphs.length > 1) {
+              // Get the second paragraph (first one after title)
+              const secondParagraph = paragraphs[1];
+              const cleanDesc = decodeHtmlEntities(stripHtmlAndNormalize(secondParagraph.replace(/<\/?p>/g, '')));
+              // Check if this paragraph contains meaningful content (not just styling or symptoms)
+              if (cleanDesc && 
+                  !cleanDesc.includes('<strong>') && 
+                  !cleanDesc.includes('rgb') && 
+                  !cleanDesc.includes('color') &&
+                  cleanDesc.length > 10) {
+                shortDescription = cleanDesc;
+                longDescription = cleanDesc;
+              }
+            }
+
+            // Extract symptoms (all list items after Symptoms heading)
+            const symptoms: string[] = [];
+            const symptomSectionMatch = htmlString.match(/<strong[^>]*>\s*Symptoms[^<]*<\/strong>.*?<ul[^>]*>(.*?)<\/ul>/i);
+            if (symptomSectionMatch) {
+              const liMatches = symptomSectionMatch[1].match(/<li>(.*?)<\/li>/g) || [];
+              symptoms.push(...liMatches.map(li => 
+                decodeHtmlEntities(stripHtmlAndNormalize(li.replace(/<[^>]*>/g, '')))
+              ));
+            }
+
+            // Extract recommendation title (first green heading after symptoms)
+            const recTitleMatch = htmlString.match(/<strong[^>]*color:\s*rgb\(51,\s*153,\s*102\)[^>]*>([^<]+)<\/strong>/i);
+            const recommendationDisplayTitle = recTitleMatch 
+              ? decodeHtmlEntities(stripHtmlAndNormalize(recTitleMatch[1])) 
+              : displayTitle;
+
+            // Extract all recommendations (all list items after the first green heading)
+            const recommendations: string[] = [];
+            const recSections = htmlString.split(/<strong[^>]*color:\s*rgb\(51,\s*153,\s*102\)[^>]*>/i);
+            
+            // Skip the first section (before first green heading) and process the rest
+            for (let i = 1; i < recSections.length; i++) {
+              const section = recSections[i];
+              const listMatch = section.match(/<ul[^>]*>(.*?)<\/ul>/i);
+              if (listMatch) {
+                const liMatches = listMatch[1].match(/<li>(.*?)<\/li>/g) || [];
+                liMatches.forEach(li => {
+                  const cleanText = decodeHtmlEntities(stripHtmlAndNormalize(li.replace(/<[^>]*>/g, '')));
+                  if (cleanText) {
+                    recommendations.push(cleanText);
+                  }
+                });
+              }
+            }
+            
+            return {
+              displayTitle,
+              shortDescription,
+              longDescription,
+              symptoms,
+              recommendationDisplayTitle,
+              recommendations
+            };
+          });
+        }
+      } catch (e) {
+        console.error("Error parsing life_style:", e);
         providerFindings = [];
       }
     }
@@ -304,5 +410,23 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     });
   }
 });
+
+function stripHtmlAndNormalize(html: string): string {
+  return html
+      .replace(/<[^>]*>/g, '') // Remove all HTML tags
+      .replace(/\s+/g, ' ')   // Replace multiple spaces/newlines with a single space
+      .trim();                 // Trim leading/trailing whitespace
+}
+
+function decodeHtmlEntities(text: string): string {
+  const entities: { [key: string]: string } = {
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&quot;': '"',
+    '&#039;': "'"
+  };
+  return text.replace(/&[#]?\w+;/g, (match) => entities[match] || match);
+}
 
 export default router;

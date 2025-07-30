@@ -113,7 +113,18 @@ router.post('/medical-report-webhook', async (req, res) => {
         .select('email, phone, buildup_user_id')
         .eq('id', record.user_id)
         .single();
-      if (!profileError && profileData) userContact = profileData;
+      console.log('[DEBUG] Supabase profiles query result:', { profileData, profileError });
+
+      // --- NEW: Hard failure if profile is not found ---
+      if (profileError || !profileData) {
+        console.error('CRITICAL: Could not find user profile in `profiles` table for user_id:', record.user_id);
+        return res.status(404).json({
+          success: false,
+          error: `User profile not found for user_id: ${record.user_id}`
+        });
+      }
+
+      userContact = profileData;
 
 // --- CRUCIAL: Check for buildup_user_id before proceeding ---
 if (!profileError && profileData && !profileData.buildup_user_id) {

@@ -49,6 +49,7 @@ async function getOAuthToken(): Promise<string> {
 }
 
 router.post('/medical-report-webhook', async (req, res) => {
+  console.log('V2.1 - MAPPING BUILDUP_USER_ID - Webhook triggered.'); // <-- Version-specific log
   console.log('Medical report webhook endpoint triggered');
   
   // Require custom auth header (same as other routes)
@@ -237,6 +238,8 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     };
 
     // Compose the final nested payload
+    console.log('[CRITICAL_LOG] Final patientInfo being sent:', patientInfo);
+
     const buildupPayload = {
       id: record.id,
       patientInfo,

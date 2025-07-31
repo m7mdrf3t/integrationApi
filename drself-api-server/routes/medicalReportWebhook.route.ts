@@ -128,9 +128,16 @@ router.post('/medical-report-webhook', async (req, res) => {
 
 // --- CRUCIAL: Check for buildup_user_id before proceeding ---
 if (!profileError && profileData && !profileData.buildup_user_id) {
-  return res.status(400).json({
-    success: false,
-    error: 'User does not have a buildup_user_id in profiles table. Buildup Health Finding endpoint will not be called.'
+  console.log('WARNING: User does not have a buildup_user_id. Skipping Buildup gateway call.');
+  return res.status(200).json({
+    success: true,
+    event_type: payload.type,
+    user_id: record.user_id,
+    file_url: record.file_url,
+    message: 'Webhook processed successfully but Buildup gateway call skipped due to missing buildup_user_id',
+    buildup_gateway_status: 'SKIPPED',
+    buildup_gateway_response: 'User does not have buildup_user_id',
+    sent_payload: null
   });
 }
     } catch (err) {
@@ -355,7 +362,6 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     };
 
     // Compose the final nested payload
-
     const buildupPayload = {
       id: record.id,
       patientInfo,
@@ -367,6 +373,21 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
     };
 
     // --- End of Unified Mapping Logic ---
+
+    // Final safety check: Ensure user has buildup_user_id before sending to gateway
+    if (!userContact.buildup_user_id) {
+      console.log('FINAL CHECK: User does not have buildup_user_id. Skipping Buildup gateway call.');
+      return res.json({
+        success: true,
+        event_type: payload.type,
+        user_id: record.user_id,
+        file_url: record.file_url,
+        message: 'Webhook processed successfully but Buildup gateway call skipped due to missing buildup_user_id',
+        buildup_gateway_status: 'SKIPPED',
+        buildup_gateway_response: 'User does not have buildup_user_id',
+        sent_payload: null
+      });
+    }
 
     console.log('Sending mapped payload to Buildup gateway:', JSON.stringify(buildupPayload, null, 2));
 

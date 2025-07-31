@@ -389,6 +389,33 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
       });
     }
 
+    // Check if all required parameters are present
+    const requiredParameters = {
+      life_style: record.life_style,
+      food_supplement: record.food_supplement,
+      life_recommendation: record.life_recommendation
+    };
+
+    const missingParameters = Object.entries(requiredParameters)
+      .filter(([key, value]) => !value || value === null || value === undefined || value === '')
+      .map(([key]) => key);
+
+    if (missingParameters.length > 0) {
+      console.log('FINAL CHECK: Missing required parameters. Skipping Buildup gateway call.');
+      console.log('Missing parameters:', missingParameters);
+      return res.json({
+        success: true,
+        event_type: payload.type,
+        user_id: record.user_id,
+        file_url: record.file_url,
+        message: `Webhook processed successfully but Buildup gateway call skipped due to missing required parameters: ${missingParameters.join(', ')}`,
+        buildup_gateway_status: 'SKIPPED',
+        buildup_gateway_response: `Missing required parameters: ${missingParameters.join(', ')}`,
+        sent_payload: null,
+        missing_parameters: missingParameters
+      });
+    }
+
     console.log('Sending mapped payload to Buildup gateway:', JSON.stringify(buildupPayload, null, 2));
 
     // Send to Buildup gateway

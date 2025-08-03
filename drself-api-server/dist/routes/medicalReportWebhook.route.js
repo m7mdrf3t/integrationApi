@@ -78,7 +78,14 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
             });
         }
         // Check if we have the required fields
+        console.log('DEBUG: Checking required fields...');
+        console.log('DEBUG: payload.record.file_url:', payload.record.file_url);
+        console.log('DEBUG: payload.record.user_id:', payload.record.user_id);
+        console.log('DEBUG: payload.record keys:', Object.keys(payload.record));
         if (!payload.record.file_url || !payload.record.user_id) {
+            console.log('DEBUG: Missing required fields detected');
+            console.log('DEBUG: file_url exists:', !!payload.record.file_url);
+            console.log('DEBUG: user_id exists:', !!payload.record.user_id);
             return res.status(400).json({
                 success: false,
                 error: 'Missing required fields: file_url or user_id'
@@ -93,18 +100,26 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
         let userProfile = {};
         let userContact = {};
         try {
-            // Fetch from 'users' table (existing logic)
+            // Fetch from 'medical_history' table (existing logic)
+            console.log('=== MEDICAL HISTORY DEBUG ===');
+            console.log('Querying medical_history for user_id:', record.user_id);
             const { data: userData, error: userError } = yield supabase
                 .from('medical_history')
                 .select('blood_type')
-                .eq('id', record.user_id)
+                .eq('user_id', record.user_id)
                 .single();
-            if (!userError && userData)
+            console.log('Medical history query result:', { userData, userError });
+            if (!userError && userData) {
                 userProfile = userData;
+                console.log('Medical history data assigned to userProfile:', userProfile);
+            }
+            else {
+                console.log('No medical history data found or error occurred');
+            }
             // Fetch from 'profiles' table for number and email
             const { data: profileData, error: profileError } = yield supabase
                 .from('profiles')
-                .select('email, phone, buildup_user_id')
+                .select('email, phone, buildup_user_id , gender, age, weight, height')
                 .eq('id', record.user_id)
                 .single();
             console.log('[DEBUG] Supabase profiles query result:', { profileData, profileError });
@@ -285,6 +300,7 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
                         return {
                             displayTitle,
                             shortDescription,
+                            description: longDescription, // Add description field
                             longDescription,
                             symptoms,
                             recommendationDisplayTitle,
@@ -314,30 +330,57 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
                 providerRecommendationsArray = [];
             }
         }
-        // Build patientInfo and scanInfo
-        const patientInfo = {
-            email: userContact.email || record.email || userProfile.email || null,
-            number: userContact.phone || null,
-            userId: userContact.buildup_user_id,
-            gender: record.gender || userProfile.gender || null,
-            age: record.age || userProfile.age || null,
-            date_of_birth: record.date_of_birth || userProfile.date_of_birth || null,
-            date_of_test: record.date_of_test || null,
-            blood_group: record.blood_group || userProfile.blood_group || null,
-            weight_kg: record.weight_kg || userProfile.weight_kg || null,
-            height_m: record.height_m || userProfile.height_m || null
+        // Helper function to format dates to ISO 8601
+        const formatToISO = (dateString) => {
+            if (!dateString)
+                return null;
+            try {
+                return new Date(dateString).toISOString();
+            }
+            catch (_a) {
+                return dateString; // Return original if parsing fails
+            }
         };
+        // Build patientInfo and scanInfo
+        console.log('=== PATIENT INFO MAPPING DEBUG ===');
+        console.log('userProfile.blood_group:', userProfile.blood_group);
+        console.log('record.blood_group:', record.blood_group);
+        console.log('userProfile:', userProfile);
+        console.log('userContact:', userContact);
+        const patientInfo = {
+            email: userContact.email || userProfile.email || record.email || null,
+            userId: userContact.buildup_user_id,
+            gender: userContact.gender || userProfile.gender || record.gender || null,
+            age: userContact.age || userProfile.age || record.age || null,
+            dateOfBirth: formatToISO(userContact.date_of_birth || userProfile.date_of_birth || record.date_of_birth),
+            dateOfTest: formatToISO(record.created_at),
+            bloodGroup: userProfile.blood_type || record.blood_group || null,
+            weightKg: userContact.weight || userProfile.weight_kg || record.weight_kg || null,
+            heightM: userContact.height || userProfile.height_m || record.height_m || null
+        };
+        console.log('Final patientInfo.bloodGroup:', patientInfo.bloodGroup);
+        // Debug scanInfo mapping
+        console.log('=== SCAN INFO DEBUG ===');
+        console.log('record.description:', record.description);
+        console.log('record.title:', record.title);
+        console.log('record.report_date:', record.report_date);
+        console.log('record.summary_status:', record.summary_status);
+        console.log('record.summary:', record.summary);
+        console.log('record.doctor_name:', record.doctor_name);
+        console.log('record.hospital_name:', record.hospital_name);
+        console.log('record.file_url:', record.file_url);
         const scanInfo = {
             title: record.title,
             description: record.description,
-            report_date: record.report_date,
-            summary_status: record.summary_status,
+            reportDate: formatToISO(record.report_date),
+            summaryStatus: record.summary_status,
             summary: record.summary,
-            summary_generated_at: record.summary_generated_at,
-            doctor_name: record.doctor_name,
-            hospital_name: record.hospital_name,
-            file_url: record.file_url
+            summaryGeneratedAt: formatToISO(record.summary_generated_at),
+            doctorName: record.doctor_name,
+            hospitalName: record.hospital_name,
+            fileUrl: record.file_url
         };
+        console.log('Final scanInfo:', scanInfo);
         // Compose the final nested payload
         const buildupPayload = {
             id: record.id,
@@ -365,9 +408,6 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
         }
         // Check if all required parameters are present
         const requiredParameters = {
-            iv_drip: record.iv_drip,
-            diet_plan: record.diet_plan,
-            blood_test: record.blood_test,
             life_style: record.life_style,
             food_supplement: record.food_supplement,
             life_recommendation: record.life_recommendation

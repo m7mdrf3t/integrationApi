@@ -51,7 +51,6 @@ paths:
               fullName: Sarah Hany
               email: sarah.hany@example.com
               buildupUserId: buildup_abc123
-
       responses:
         '200':
           description: User registered successfully
@@ -63,11 +62,14 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  userId:
+                  drSelfUserId:
                     type: string
-                    example: 123e4567-e89b-12d3-a456-426614174000
+                    example: drself-67890
+              example:
+                success: true
+                drSelfUserId: drself-67890
         '400':
-          description: Bad Request
+          description: Bad Request - Missing or invalid fields
           content:
             application/json:
               schema:
@@ -76,11 +78,50 @@ paths:
                   success:
                     type: boolean
                     example: false
-                  message:
+                  error:
                     type: string
-                    example: Missing required field: email
+                    example: Missing required fields: fullName, email, buildupUserId
+              example:
+                success: false
+                error: Missing required fields: fullName, email, buildupUserId
         '401':
-          description: Unauthorized
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Unauthorized: Invalid or missing API key
+              example:
+                error: Unauthorized: Invalid or missing API key
+        '404':
+          description: User not found or edge function not available
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+              example:
+                error: User not found
+        '422':
+          description: Validation error from edge function
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Validation failed
+              example:
+                error: Validation failed
+        '500':
+          description: Internal Server Error - Edge function error or server error
           content:
             application/json:
               schema:
@@ -89,9 +130,12 @@ paths:
                   success:
                     type: boolean
                     example: false
-                  message:
+                  error:
                     type: string
-                    example: Invalid API key
+                    example: Internal server error
+              example:
+                success: false
+                error: Internal server error
 
   /api/v1/medical-report-webhook:
     post:
@@ -263,20 +307,249 @@ paths:
                   success:
                     type: boolean
                     example: true
-                  url:
+                  event_type:
+                    type: string
+                    example: INSERT
+                  user_id:
+                    type: string
+                    example: 23d2bf91-f9d0-4a20-901c-59f2b7b1bacb
+                  file_url:
                     type: string
                     format: uri
                     example: https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/23d2bf91-f9d0-4a20-901c-59f2b7b1bacb/1753569790450_Mahfouz_7_2_25.pdf
-                  webhook_called:
-                    type: boolean
-                    example: true
-                  webhook_response:
+                  message:
                     type: string
-                    example: |-
-                      {"message": "Error in workflow"}
-                  webhook_status:
-                    type: integer
-                    example: 500
+                    example: Webhook processed successfully
+                  buildup_gateway_status:
+                    type: string
+                    enum: [SUCCESS, SKIPPED, ERROR]
+                    example: SUCCESS
+                  buildup_gateway_response:
+                    type: string
+                    example: OK
+                  sent_payload:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: 5ba55b4a-a980-49e6-82eb-b7a84ad17a36
+                      patientInfo:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            example: Ahmedessamyounsa@gmail.com
+                          userId:
+                            type: string
+                            example: 23d2bf91-f9d0-4a20-901c-59f2b7b1bacb
+                          gender:
+                            type: string
+                            example: Male
+                          age:
+                            type: integer
+                            example: 38
+                          dateOfBirth:
+                            type: string
+                            format: date
+                            example: 1985-10-21
+                          dateOfTest:
+                            type: string
+                            format: date
+                            example: 2024-05-18
+                          bloodGroup:
+                            type: string
+                            example: A
+                          weightKg:
+                            type: number
+                            example: 86
+                          heightM:
+                            type: number
+                            example: 1.60
+                      scanInfo:
+                        type: object
+                        properties:
+                          title:
+                            type: string
+                            example: Mahfouz_7_2_25
+                          description:
+                            type: string
+                            example: build up
+                          reportDate:
+                            type: string
+                            format: date
+                            example: 2025-07-26
+                          summaryStatus:
+                            type: string
+                            example: pending
+                          summary:
+                            type: string
+                            nullable: true
+                          summaryGeneratedAt:
+                            type: string
+                            format: date-time
+                            nullable: true
+                          doctorName:
+                            type: string
+                            nullable: true
+                          hospitalName:
+                            type: string
+                            nullable: true
+                          fileUrl:
+                            type: string
+                            format: uri
+                            example: https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/23d2bf91-f9d0-4a20-901c-59f2b7b1bacb/1753569790450_Mahfouz_7_2_25.pdf
+                      ivDrip:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              example: Detox Drip
+                            dosage:
+                              type: string
+                              example: 750 ml
+                            frequency:
+                              type: string
+                              example: Once
+                      foodSupplement:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              example: Glutathione
+                            dosage:
+                              type: string
+                              example: 250 mg
+                            frequency:
+                              type: string
+                              example: Once daily
+                      providerFindings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            displayTitle:
+                              type: string
+                              example: Title to be displayed in mobile
+                            shortDescription:
+                              type: string
+                              example: Heavy metals and detoxification rate some how disturbed
+                            description:
+                              type: string
+                              example: Exposure to toxins in your daily life is unavoidable. Though not always immediately harmful, these substances can be found in a variety of places, from food to soaps to the environment. When toxins build up in our body, it can affect you in ways you may not realize
+                            longDescription:
+                              type: string
+                              example: Exposure to toxins in your daily life is unavoidable. Though not always immediately harmful, these substances can be found in a variety of places, from food to soaps to the environment. When toxins build up in our body, it can affect you in ways you may not realize
+                            symptoms:
+                              type: array
+                              items:
+                                type: string
+                              example: ["Fatigue.", "Joints pain.", "Chemical sensitivity.", "Brain fog.", "Low energy.", "Constipation."]
+                            recommendationDisplayTitle:
+                              type: string
+                              example: Title to be displayed in mobile
+                            recommendations:
+                              type: array
+                              items:
+                                type: string
+                              example: ["Eat Enough Protein at Every Meal.", "Get plenty of restorative sleep.", "Plan your meals with good nutrition in mind. Whole grains, fresh fruits and vegetables. Avoid processed and pre-packaged foods.", "Adapt a stress management technique such as yoga, meditation.", "Physical activity heightens.", "Avoid bad behaviors like smoking, drinking alcohol.", "Drink plenty of water.", "Take a sauna or a hot bath regularly.", "Reduce exposure to toxic elements."]
+                      providerRecommendations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            title:
+                              type: string
+                              example: MINERAL
+                            recommendation:
+                              type: array
+                              items:
+                                type: string
+                              example: ["Phosphorus Borderline Deficiency\nS & S include:\nTooth decay, Fatigue, Vit D deficiency, Muscle weakness\nPhosphorus sources:\nMeats, Poultry, Fish, Nuts, Beans", "Chromium Borderline Deficiency\nS& S include: \nWeight gain, Fatigue.Metabolism weakness\nChromium sources:\nBroccoli, Potatoes, Green beans.Beef and Poultry. Bananas, Grape Juice.", "Fluoride Border line Deficiency \nS & S include: \nTooth decay, Cavities\n Fluoride sources: \nCrab , Oysters, Potatoes., Toothpaste, Black tea."]
+              example:
+                success: true
+                event_type: INSERT
+                user_id: 23d2bf91-f9d0-4a20-901c-59f2b7b1bacb
+                file_url: https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/23d2bf91-f9d0-4a20-901c-59f2b7b1bacb/1753569790450_Mahfouz_7_2_25.pdf
+                message: Webhook processed successfully
+                buildup_gateway_status: SUCCESS
+                buildup_gateway_response: OK
+                sent_payload:
+                  id: 5ba55b4a-a980-49e6-82eb-b7a84ad17a36
+                  patientInfo:
+                    email: Ahmedessamyounsa@gmail.com
+                    userId: 23d2bf91-f9d0-4a20-901c-59f2b7b1bacb
+                    gender: Male
+                    age: 38
+                    dateOfBirth: 1985-10-21
+                    dateOfTest: 2024-05-18
+                    bloodGroup: A
+                    weightKg: 86
+                    heightM: 1.60
+                  scanInfo:
+                    title: Mahfouz_7_2_25
+                    description: build up
+                    reportDate: 2025-07-26
+                    summaryStatus: pending
+                    summary: null
+                    summaryGeneratedAt: null
+                    doctorName: null
+                    hospitalName: null
+                    fileUrl: https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/23d2bf91-f9d0-4a20-901c-59f2b7b1bacb/1753569790450_Mahfouz_7_2_25.pdf
+                  ivDrip:
+                    - name: Detox Drip
+                      dosage: 750 ml
+                      frequency: Once
+                    - name: Detox Drip
+                      dosage: 750 ml
+                      frequency: Once
+                  foodSupplement:
+                    - name: Glutathione
+                      dosage: 250 mg
+                      frequency: Once daily
+                    - name: Vit D
+                      dosage: 10000 IU
+                      frequency: Once daily
+                  providerFindings:
+                    - displayTitle: Title to be displayed in mobile
+                      shortDescription: Heavy metals and detoxification rate some how disturbed
+                      description: Exposure to toxins in your daily life is unavoidable. Though not always immediately harmful, these substances can be found in a variety of places, from food to soaps to the environment. When toxins build up in our body, it can affect you in ways you may not realize
+                      longDescription: Exposure to toxins in your daily life is unavoidable. Though not always immediately harmful, these substances can be found in a variety of places, from food to soaps to the environment. When toxins build up in our body, it can affect you in ways you may not realize
+                      symptoms:
+                        - Fatigue.
+                        - Joints pain.
+                        - Chemical sensitivity.
+                        - Brain fog.
+                        - Low energy.
+                        - Constipation.
+                      recommendationDisplayTitle: Title to be displayed in mobile
+                      recommendations:
+                        - Eat Enough Protein at Every Meal.
+                        - Get plenty of restorative sleep.
+                        - Plan your meals with good nutrition in mind. Whole grains, fresh fruits and vegetables. Avoid processed and pre-packaged foods.
+                        - Adapt a stress management technique such as yoga, meditation.
+                        - Physical activity heightens.
+                        - Avoid bad behaviors like smoking, drinking alcohol.
+                        - Drink plenty of water.
+                        - Take a sauna or a hot bath regularly.
+                        - Reduce exposure to toxic elements.
+                  providerRecommendations:
+                    - title: MINERAL
+                      recommendation:
+                        - Phosphorus Borderline Deficiency\nS & S include:\nTooth decay, Fatigue, Vit D deficiency, Muscle weakness\nPhosphorus sources:\nMeats, Poultry, Fish, Nuts, Beans
+                        - Chromium Borderline Deficiency\nS& S include: \nWeight gain, Fatigue.Metabolism weakness\nChromium sources:\nBroccoli, Potatoes, Green beans.Beef and Poultry. Bananas, Grape Juice.
+                        - Fluoride Border line Deficiency \nS & S include: \nTooth decay, Cavities\n Fluoride sources: \nCrab , Oysters, Potatoes., Toothpaste, Black tea.
+                    - title: RATIOS
+                      recommendation:
+                        - Ca/P Unbalanced ratio: \nS&S may include:\nVit D Deficiency, Parathyroid ,Poor usage of Calcium
+                        - K/Na Unbalanced ratio: \nS&S may include:\nExcess consumption of salt, Inflammation, Chronic stress
+                    - title: HEAVY METAL
+                      recommendation:
+                        - Cadmium Very High\nS & S Include:\nBronchitis, bone fractures, immunity weakness,Slow wound healing\nSources:\nCigarette , car exhaust fume ,instant coffee , Oud incense ,paint,chocolate.
+                        - Mercury Very High\nSources:\nDental amalgams. Tuna fish,Medication.Plastic , Ink and Paint\nS & S Include:\nMuscle weakness, fatigue,Stomach ache.
         '400':
           description: Bad request
           content:
@@ -300,130 +573,7 @@ paths:
                   error:
                     type: string
                     example: 'Authorization header required'
-    post:
-      tags:
-        - Register
-      summary: Register a new user in the Dr.Self system
-      description: >
-        Registers a user by forwarding the request to a Supabase Edge Function.
-        Expects a JSON body with fullName, email, and buildupUserId.
-      parameters:
-        - in: header
-          name: x-drself-auth
-          required: true
-          schema:
-            type: string
-          description: Custom API key for authentication
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - fullName
-                - email
-                - buildupUserId
-              properties:
-                fullName:
-                  type: string
-                  example: Sarah Hany
-                email:
-                  type: string
-                  format: email
-                  example: sarah.hany@example.com
-                buildupUserId:
-                  type: string
-                  example: buildup_abc123
-            example:
-              fullName: Sarah Hany
-              email: sarah.hany@example.com
-              buildupUserId: buildup_abc123
-      responses:
-        '200':
-          description: User registered successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  drSelfUserId:
-                    type: string
-                    example: drself-67890
-              example:
-                success: true
-                drSelfUserId: drself-67890
-        '400':
-          description: Bad Request - Missing or invalid fields
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: string
-                    example: Missing required fields: fullName, email, buildupUserId
-              example:
-                success: false
-                error: Missing required fields: fullName, email, buildupUserId
-        '401':
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Unauthorized: Invalid or missing API key
-              example:
-                error: Unauthorized: Invalid or missing API key
-        '404':
-          description: User not found or edge function not available
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: User not found
-              example:
-                error: User not found
-        '422':
-          description: Validation error from edge function
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Validation failed
-              example:
-                error: Validation failed
-        '500':
-          description: Internal Server Error - Edge function error or server error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: string
-                    example: Internal server error
-              example:
-                success: false
-                error: Internal server error 
+
   /api/v1/update-buildup-user-id:
     post:
       tags:
@@ -543,255 +693,4 @@ paths:
                     type: string
                     example: "Failed to update Buildup user ID"
               example:
-                error: "Failed to update Buildup user ID"
-              example:
-                success: false
-                error: Internal server error 
-  /api/v1/medical-report-webhook:
-    post:
-      tags:
-        - Webhook
-      summary: Medical Report Webhook
-      description: >
-        Receives webhook events for medical report file uploads/updates. Processes the payload and may call an external webhook if conditions are met.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                type:
-                  type: string
-                  enum: [INSERT, UPDATE]
-                  example: INSERT
-                record:
-                  type: object
-                  properties:
-                    file_url:
-                      type: string
-                      example: https://example.com/report.pdf
-                      type: string
-                      example: "1751759596736_Mahfouz_7_2_25"
-                    status:
-                      type: string
-                      example: "completed"
-                    iv_drip:
-                      type: string
-                      example: "Detox Drip 750 ml ff ffvfgfgfgbgbv jjjjj njnjbj jjjjj"
-                    summary:
-                      type: string
-                      example: null
-                    user_id:
-                      type: string
-                      example: "52f07a22-842c-4125-bfd0-6b83f4840499"
-                    file_url:
-                      type: string
-                      example: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf"
-                    diet_plan:
-                      type: string
-                      example: '{...}'
-                    blood_test:
-                      type: string
-                      example: '["Vitamin D test"]'
-                    created_at:
-                      type: string
-                      example: "2025-07-27T10:35:12.608384+00:00"
-                    life_style:
-                      type: string
-                      example: '[...]'
-                    updated_at:
-                      type: string
-                      example: "2025-07-29T02:05:23.701239+00:00"
-                    description:
-                      type: string
-                      example: null
-                    doctor_name:
-                      type: string
-                      example: null
-                    report_date:
-                      type: string
-                      example: "2025-07-27"
-                    hospital_name:
-                      type: string
-                      example: null
-                    summary_status:
-                      type: string
-                      example: "pending"
-                    food_supplement:
-                      type: string
-                      example: '["Glutathione 250mg Once daily","Vit D 10000 IU - Once daily"]'
-                    life_recommendation:
-                      type: string
-                      example: '[...]'
-                    summary_generated_at:
-                      type: string
-                      example: null
-                schema:
-                  type: string
-                  example: public
-                old_record:
-                  type: object
-                  properties:
-                    id:
-                      type: string
-                      example: "627cc941-e6e9-4b56-abc2-e2d9fb475e26"
-                    title:
-                      type: string
-                      example: "1751759596736_Mahfouz_7_2_25"
-                    status:
-                      type: string
-                      example: "completed"
-                    iv_drip:
-                      type: string
-                      example: "Detox Drip 750 ml ff ffvgfgfgbgbv jjjjj njnjbj jjjjj"
-                    summary:
-                      type: string
-                      example: null
-                    user_id:
-                      type: string
-                      example: "52f07a22-842c-4125-bfd0-6b83f4840499"
-                    file_url:
-                      type: string
-                      example: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf"
-                    diet_plan:
-                      type: string
-                      example: '{...}'
-                    blood_test:
-                      type: string
-                      example: '["Vitamin D test"]'
-                    created_at:
-                      type: string
-                      example: "2025-07-27T10:35:12.608384+00:00"
-                    life_style:
-                      type: string
-                      example: '[...]'
-                    updated_at:
-                      type: string
-                      example: "2025-07-29T02:03:15.594374+00:00"
-                    description:
-                      type: string
-                      example: null
-                    doctor_name:
-                      type: string
-                      example: null
-                    report_date:
-                      type: string
-                      example: "2025-07-27"
-                    hospital_name:
-                      type: string
-                      example: null
-                    summary_status:
-                      type: string
-                      example: "pending"
-                    food_supplement:
-                      type: string
-                      example: '["Glutathione 250mg Once daily","Vit D 10000 IU - Once daily"]'
-                    life_recommendation:
-                      type: string
-                      example: '[...]'
-                    summary_generated_at:
-                      type: string
-                      example: null
-            example:
-              type: UPDATE
-              table: medical_reports
-              record:
-                id: "627cc941-e6e9-4b56-abc2-e2d9fb475e26"
-                title: "1751759596736_Mahfouz_7_2_25"
-                status: "completed"
-                iv_drip: "Detox Drip 750 ml ff ffvfgfgfgbgbv jjjjj njnjbj jjjjj"
-                summary: null
-                user_id: "52f07a22-842c-4125-bfd0-6b83f4840499"
-                file_url: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf"
-                diet_plan: '{...}'
-                blood_test: '["Vitamin D test"]'
-                created_at: "2025-07-27T10:35:12.608384+00:00"
-                life_style: '[...]'
-                updated_at: "2025-07-29T02:05:23.701239+00:00"
-                description: null
-                doctor_name: null
-                report_date: "2025-07-27"
-                hospital_name: null
-                summary_status: "pending"
-                food_supplement: '["Glutathione 250mg Once daily","Vit D 10000 IU - Once daily"]'
-                life_recommendation: '[...]'
-                summary_generated_at: null
-              schema: public
-              old_record:
-                id: "627cc941-e6e9-4b56-abc2-e2d9fb475e26"
-                title: "1751759596736_Mahfouz_7_2_25"
-                status: "completed"
-                iv_drip: "Detox Drip 750 ml ff ffvgfgfgbgbv jjjjj njnjbj jjjjj"
-                summary: null
-                user_id: "52f07a22-842c-4125-bfd0-6b83f4840499"
-                file_url: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/medical-reports/52f07a22-842c-4125-bfd0-6b83f4840499/1753612512085_1751759596736_Mahfouz_7_2_25.pdf"
-                diet_plan: '{...}'
-                blood_test: '["Vitamin D test"]'
-                created_at: "2025-07-27T10:35:12.608384+00:00"
-                life_style: '[...]'
-                updated_at: "2025-07-29T02:03:15.594374+00:00"
-                description: null
-                doctor_name: null
-                report_date: "2025-07-27"
-                hospital_name: null
-                summary_status: "pending"
-                food_supplement: '["Glutathione 250mg Once daily","Vit D 10000 IU - Once daily"]'
-                life_recommendation: '[...]'
-                summary_generated_at: null
-      responses:
-        '200':
-          description: Webhook processed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  url:
-                    type: string
-                    example: https://example.com/report.pdf
-                  webhook_called:
-                    type: boolean
-                    example: true
-                  webhook_response:
-                    type: string
-                    example: OK
-                  webhook_status:
-                    type: integer
-                    example: 200
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: false
-                  error:
-                    type: string
-                    example: No user_id found
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Authorization header required
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                    example: Internal server error 
+                error: "Failed to update Buildup user ID" 

@@ -243,6 +243,33 @@ router.post('/oligo-medical-report-webhook', (req, res) => __awaiter(void 0, voi
                 providerFindings = [];
             }
         }
+        // Parse bloodTests from blood_test field
+        let bloodTestsArray = [];
+        if (record.blood_test) {
+            console.log('=== BLOOD TESTS PARSING DEBUG ===');
+            console.log('Original blood_test:', record.blood_test);
+            try {
+                const parsed = JSON.parse(record.blood_test);
+                if (Array.isArray(parsed)) {
+                    bloodTestsArray = parsed.map((test) => {
+                        if (typeof test === 'string') {
+                            return test.trim();
+                        }
+                        return String(test).trim();
+                    });
+                }
+                else {
+                    // If it's a single string, split by comma
+                    bloodTestsArray = record.blood_test.split(',').map((test) => test.trim());
+                }
+            }
+            catch (e) {
+                console.error("Error parsing blood_test:", e);
+                // Fallback to comma-separated parsing
+                bloodTestsArray = record.blood_test.split(',').map((test) => test.trim());
+            }
+            console.log('Final bloodTestsArray:', JSON.stringify(bloodTestsArray, null, 2));
+        }
         // Parse providerRecommendations from Life_recommendation (Oligo format)
         let providerRecommendationsArray = [];
         if (record.Life_recommendation) {
@@ -327,16 +354,21 @@ router.post('/oligo-medical-report-webhook', (req, res) => __awaiter(void 0, voi
             oligoUrl: record.file_url // Add oligoUrl field - same as fileUrl for Oligo reports
         };
         console.log('Final scanInfo:', scanInfo);
+        console.log('Final bloodTestsArray:', bloodTestsArray);
         // Compose the final nested payload
         const buildupPayload = {
             id: record.id,
             patientInfo,
             scanInfo,
+            bloodTests: bloodTestsArray,
             ivDrip: ivDripArray,
             foodSupplement: foodSupplementArray,
             providerFindings,
             providerRecommendations: providerRecommendationsArray
         };
+        console.log('=== FINAL PAYLOAD DEBUG ===');
+        console.log('bloodTests in payload:', buildupPayload.bloodTests);
+        console.log('oligoUrl in payload:', buildupPayload.scanInfo.oligoUrl);
         // --- End of Unified Mapping Logic ---
         // Final safety check: Ensure user has buildup_user_id before sending to gateway
         if (!userContact.buildup_user_id) {

@@ -979,6 +979,13 @@ paths:
                               example:
                                 - "Eat Enough Protein at Every Meal"
                                 - "Get plenty of restorative sleep"
+                      bloodTests:
+                        type: array
+                        items:
+                          type: string
+                        example:
+                          - "OGGTT"
+                          - "CBC"
                       providerRecommendations:
                         type: array
                         items:
@@ -1023,6 +1030,9 @@ paths:
                     hospitalName: null
                     fileUrl: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/oligo-doctor/f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7/1754438931798_Oligo-Full-Report.pdf"
                     oligoUrl: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/oligo-doctor/f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7/1754438931798_Oligo-Full-Report.pdf"
+                  bloodTests:
+                    - "OGGTT"
+                    - "CBC"
                   ivDrip:
                     - name: "Detox Drip"
                       dosage: "750"

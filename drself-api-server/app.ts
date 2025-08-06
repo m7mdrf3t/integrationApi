@@ -9,6 +9,7 @@ import path from 'path';
 import fs from 'fs';
 import YAML from 'yamljs';
 import medicalReportWebhookRouter from './routes/medicalReportWebhook.route';
+import oligoMedicalReportWebhookRouter from './routes/oligoMedicalReportWebhook.route';
 import webhookResponsesRouter from './routes/webhookResponses.route';
 import debugRouter from './routes/debug.route';
 
@@ -30,6 +31,7 @@ app.use(express.json());
 app.use('/api/v1', registerUserRouter);
 app.use('/api/v1', updateBuildUpUserIdRouter);
 app.use('/api/v1', medicalReportWebhookRouter);
+app.use('/api/v1', oligoMedicalReportWebhookRouter);
 app.use('/api/v1', webhookResponsesRouter);
 app.use('/api/v1', debugRouter);
 

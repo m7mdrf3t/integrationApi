@@ -693,4 +693,410 @@ paths:
                     type: string
                     example: "Failed to update Buildup user ID"
               example:
-                error: "Failed to update Buildup user ID" 
+                error: "Failed to update Buildup user ID"
+
+  /api/v1/oligo-medical-report-webhook:
+    post:
+      tags:
+        - Webhook
+      summary: Process Oligo medical report webhook events
+      description: >
+        Handles webhook events for Oligo medical reports, forwarding them to the Buildup gateway.
+        Only supports INSERT and UPDATE event types. Processes Oligo-specific data format.
+      parameters:
+        - in: header
+          name: x-drself-auth
+          required: true
+          schema:
+            type: string
+          description: Custom API key for authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - record
+              properties:
+                type:
+                  type: string
+                  enum: [INSERT, UPDATE]
+                  description: Type of event (INSERT or UPDATE)
+                record:
+                  type: object
+                  required:
+                    - file_url
+                    - user_id
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                      example: c6b6ba88-a9a2-4350-b09a-7a5efcd0a7dc
+                    title:
+                      type: string
+                      example: Oligo-Full-Report-test-8
+                    status:
+                      type: string
+                      example: completed
+                    iv_drip:
+                      type: string
+                      example: "Detox Drip 750"
+                    summary:
+                      type: string
+                      nullable: true
+                    user_id:
+                      type: string
+                      format: uuid
+                      example: f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7
+                    file_url:
+                      type: string
+                      format: uri
+                      example: https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/oligo-doctor/f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7/1754438931798_Oligo-Full-Report.pdf
+                    diet_plan:
+                      type: string
+                      example: "Subscribe to DR.Self"
+                    blood_test:
+                      type: string
+                      example: '["Vitamin D test"]'
+                    created_at:
+                      type: string
+                      format: date-time
+                      example: "2025-08-06T00:08:52.460885+00:00"
+                    life_style:
+                      type: string
+                      example: '[{"category":"Heavy metals and detoxification rate","status":"some how disturbed","symptoms":["Fatigue","Joints pain","Chemical sensitivity","Brain fog","Low energy","Constipation"],"steps":["Eat Enough Protein at Every Meal","Get plenty of restorative sleep","Plan your meals with good nutrition in mind","Adapt a stress management technique","Physical activity heightens","Avoid bad behaviors like smoking, drinking alcohol","Drink plenty of water","Take a sauna or a hot bath regularly","Reduce exposure to toxic elements"]}]'
+                    food_supplement:
+                      type: string
+                      example: '[{"name":"Glutathione","dosage":"250mg","frequency":"Once daily"},{"name":"Vit D","dosage":"10000 IU","frequency":"Once daily"}]'
+                    Life_recommendation:
+                      type: string
+                      example: '[{"title":"MINERAL","recommendations":[{"condition":"Phosphorus Borderline Deficiency","symptoms":["Tooth decay","Fatigue","Vit D deficiency","Muscle weakness"],"sources":["Meats","Poultry","Fish","Nuts","Beans"]}]}]'
+                    patient_unique_id:
+                      type: string
+                      example: "IAH350"
+                    description:
+                      type: string
+                      example: "test8"
+                    report_date:
+                      type: string
+                      format: date
+                      example: "2025-08-06"
+                    summary_status:
+                      type: string
+                      example: "pending"
+                    summary_generated_at:
+                      type: string
+                      format: date-time
+                      nullable: true
+            example:
+              type: "UPDATE"
+              record:
+                id: "c6b6ba88-a9a2-4350-b09a-7a5efcd0a7dc"
+                title: "Oligo-Full-Report-test-8"
+                status: "completed"
+                iv_drip: "Detox Drip 750"
+                summary: null
+                user_id: "f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7"
+                file_url: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/oligo-doctor/f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7/1754438931798_Oligo-Full-Report.pdf"
+                diet_plan: "Subscribe to DR.Self"
+                blood_test: '["Vitamin D test"]'
+                created_at: "2025-08-06T00:08:52.460885+00:00"
+                life_style: '[{"category":"Heavy metals and detoxification rate","status":"some how disturbed","symptoms":["Fatigue","Joints pain","Chemical sensitivity","Brain fog","Low energy","Constipation"],"steps":["Eat Enough Protein at Every Meal","Get plenty of restorative sleep","Plan your meals with good nutrition in mind","Adapt a stress management technique","Physical activity heightens","Avoid bad behaviors like smoking, drinking alcohol","Drink plenty of water","Take a sauna or a hot bath regularly","Reduce exposure to toxic elements"]}]'
+                food_supplement: '[{"name":"Glutathione","dosage":"250mg","frequency":"Once daily"},{"name":"Vit D","dosage":"10000 IU","frequency":"Once daily"}]'
+                Life_recommendation: '[{"title":"MINERAL","recommendations":[{"condition":"Phosphorus Borderline Deficiency","symptoms":["Tooth decay","Fatigue","Vit D deficiency","Muscle weakness"],"sources":["Meats","Poultry","Fish","Nuts","Beans"]}]}]'
+                patient_unique_id: "IAH350"
+                description: "test8"
+                report_date: "2025-08-06"
+                summary_status: "pending"
+                summary_generated_at: null
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  event_type:
+                    type: string
+                    example: "UPDATE"
+                  user_id:
+                    type: string
+                    format: uuid
+                    example: "f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7"
+                  file_url:
+                    type: string
+                    format: uri
+                    example: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/oligo-doctor/f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7/1754438931798_Oligo-Full-Report.pdf"
+                  buildup_gateway_status:
+                    type: integer
+                    example: 200
+                  buildup_gateway_response:
+                    type: string
+                    example: "Success"
+                  sent_payload:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        example: "c6b6ba88-a9a2-4350-b09a-7a5efcd0a7dc"
+                      patientInfo:
+                        type: object
+                        properties:
+                          email:
+                            type: string
+                            format: email
+                            example: "user@example.com"
+                          userId:
+                            type: string
+                            example: "buildup_user_123"
+                          gender:
+                            type: string
+                            example: "Male"
+                          age:
+                            type: integer
+                            example: 30
+                          dateOfBirth:
+                            type: string
+                            format: date-time
+                            example: "1993-01-01T00:00:00.000Z"
+                          dateOfTest:
+                            type: string
+                            format: date-time
+                            example: "2025-08-06T00:08:52.460Z"
+                          bloodGroup:
+                            type: string
+                            example: "A+"
+                          weightKg:
+                            type: number
+                            example: 70.5
+                          heightM:
+                            type: number
+                            example: 1.75
+                      scanInfo:
+                        type: object
+                        properties:
+                          title:
+                            type: string
+                            example: "Oligo-Full-Report-test-8"
+                          description:
+                            type: string
+                            example: "test8"
+                          reportDate:
+                            type: string
+                            format: date-time
+                            example: "2025-08-06T00:00:00.000Z"
+                          summaryStatus:
+                            type: string
+                            example: "pending"
+                          summary:
+                            type: string
+                            nullable: true
+                          summaryGeneratedAt:
+                            type: string
+                            format: date-time
+                            nullable: true
+                          doctorName:
+                            type: string
+                            nullable: true
+                          hospitalName:
+                            type: string
+                            nullable: true
+                          fileUrl:
+                            type: string
+                            format: uri
+                            example: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/oligo-doctor/f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7/1754438931798_Oligo-Full-Report.pdf"
+                      ivDrip:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              example: "Detox Drip"
+                            dosage:
+                              type: string
+                              example: "750"
+                            frequency:
+                              type: string
+                              example: "Once"
+                      foodSupplement:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                              example: "Glutathione"
+                            dosage:
+                              type: string
+                              example: "250mg"
+                            frequency:
+                              type: string
+                              example: "Once daily"
+                      providerFindings:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            displayTitle:
+                              type: string
+                              example: "Heavy metals and detoxification rate"
+                            shortDescription:
+                              type: string
+                              example: "Heavy metals and detoxification rate some how disturbed"
+                            description:
+                              type: string
+                              example: "Heavy metals and detoxification rate some how disturbed"
+                            longDescription:
+                              type: string
+                              example: "Heavy metals and detoxification rate some how disturbed"
+                            symptoms:
+                              type: array
+                              items:
+                                type: string
+                              example:
+                                - "Fatigue"
+                                - "Joints pain"
+                                - "Chemical sensitivity"
+                            recommendationDisplayTitle:
+                              type: string
+                              example: "Heavy metals and detoxification rate"
+                            recommendations:
+                              type: array
+                              items:
+                                type: string
+                              example:
+                                - "Eat Enough Protein at Every Meal"
+                                - "Get plenty of restorative sleep"
+                      providerRecommendations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            title:
+                              type: string
+                              example: "MINERAL"
+                            recommendation:
+                              type: array
+                              items:
+                                type: string
+                              example:
+                                - "Phosphorus Borderline Deficiency\nS & S include:\nTooth decay, Fatigue, Vit D deficiency, Muscle weakness\nPhosphorus sources:\nMeats, Poultry, Fish, Nuts, Beans"
+              example:
+                success: true
+                event_type: "UPDATE"
+                user_id: "f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7"
+                file_url: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/oligo-doctor/f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7/1754438931798_Oligo-Full-Report.pdf"
+                buildup_gateway_status: 200
+                buildup_gateway_response: "Success"
+                sent_payload:
+                  id: "c6b6ba88-a9a2-4350-b09a-7a5efcd0a7dc"
+                  patientInfo:
+                    email: "user@example.com"
+                    userId: "buildup_user_123"
+                    gender: "Male"
+                    age: 30
+                    dateOfBirth: "1993-01-01T00:00:00.000Z"
+                    dateOfTest: "2025-08-06T00:08:52.460Z"
+                    bloodGroup: "A+"
+                    weightKg: 70.5
+                    heightM: 1.75
+                  scanInfo:
+                    title: "Oligo-Full-Report-test-8"
+                    description: "test8"
+                    reportDate: "2025-08-06T00:00:00.000Z"
+                    summaryStatus: "pending"
+                    summary: null
+                    summaryGeneratedAt: null
+                    doctorName: null
+                    hospitalName: null
+                    fileUrl: "https://lluclyumbgjzcfkuyblg.supabase.co/storage/v1/object/public/oligo-doctor/f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7/1754438931798_Oligo-Full-Report.pdf"
+                  ivDrip:
+                    - name: "Detox Drip"
+                      dosage: "750"
+                      frequency: "Once"
+                  foodSupplement:
+                    - name: "Glutathione"
+                      dosage: "250mg"
+                      frequency: "Once daily"
+                    - name: "Vit D"
+                      dosage: "10000 IU"
+                      frequency: "Once daily"
+                  providerFindings:
+                    - displayTitle: "Heavy metals and detoxification rate"
+                      shortDescription: "Heavy metals and detoxification rate some how disturbed"
+                      description: "Heavy metals and detoxification rate some how disturbed"
+                      longDescription: "Heavy metals and detoxification rate some how disturbed"
+                      symptoms: ["Fatigue", "Joints pain", "Chemical sensitivity", "Brain fog", "Low energy", "Constipation"]
+                      recommendationDisplayTitle: "Heavy metals and detoxification rate"
+                      recommendations: ["Eat Enough Protein at Every Meal", "Get plenty of restorative sleep", "Plan your meals with good nutrition in mind", "Adapt a stress management technique", "Physical activity heightens", "Avoid bad behaviors like smoking, drinking alcohol", "Drink plenty of water", "Take a sauna or a hot bath regularly", "Reduce exposure to toxic elements"]
+                  providerRecommendations:
+                    - title: "MINERAL"
+                      recommendation: ["Phosphorus Borderline Deficiency\nS & S include:\nTooth decay, Fatigue, Vit D deficiency, Muscle weakness\nPhosphorus sources:\nMeats, Poultry, Fish, Nuts, Beans"]
+        '400':
+          description: Bad Request - Missing required fields or invalid payload structure
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Missing required fields: file_url or user_id"
+              example:
+                success: false
+                error: "Missing required fields: file_url or user_id"
+        '401':
+          description: Unauthorized - Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Authorization header required"
+              example:
+                error: "Authorization header required"
+        '404':
+          description: User profile not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "User profile not found for user_id: f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7"
+              example:
+                success: false
+                error: "User profile not found for user_id: f22b06a5-5a0f-4a93-85ae-64d87eb0b1f7"
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Error processing webhook"
+              example:
+                success: false
+                error: "Error processing webhook" 

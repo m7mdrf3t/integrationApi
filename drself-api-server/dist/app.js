@@ -13,6 +13,7 @@ const path_1 = __importDefault(require("path"));
 const fs_1 = __importDefault(require("fs"));
 const yamljs_1 = __importDefault(require("yamljs"));
 const medicalReportWebhook_route_1 = __importDefault(require("./routes/medicalReportWebhook.route"));
+const oligoMedicalReportWebhook_route_1 = __importDefault(require("./routes/oligoMedicalReportWebhook.route"));
 const webhookResponses_route_1 = __importDefault(require("./routes/webhookResponses.route"));
 const debug_route_1 = __importDefault(require("./routes/debug.route"));
 // Load environment variables
@@ -29,6 +30,7 @@ app.use(express_1.default.json());
 app.use('/api/v1', registerUser_route_1.default);
 app.use('/api/v1', updateBuildUpUserId_route_1.default);
 app.use('/api/v1', medicalReportWebhook_route_1.default);
+app.use('/api/v1', oligoMedicalReportWebhook_route_1.default);
 app.use('/api/v1', webhookResponses_route_1.default);
 app.use('/api/v1', debug_route_1.default);
 // Serve the raw YAML file

@@ -121,7 +121,7 @@ router.post('/oligo-medical-report-webhook', async (req, res) => {
       console.log('Querying medical_history for user_id:', record.user_id);
       const { data: userData, error: userError } = await supabase
         .from('medical_history')
-        .select('blood_type')
+        .select('blood_type, gender, age, date_of_birth, weight_kg, height_m, blood_group, email, phone')
         .eq('user_id', record.user_id)
         .single();
       console.log('Medical history query result:', { userData, userError });
@@ -351,7 +351,8 @@ if (!profileError && profileData && !profileData.buildup_user_id) {
       summaryGeneratedAt: formatToISO(record.summary_generated_at),
       doctorName: record.doctor_name,
       hospitalName: record.hospital_name,
-      fileUrl: record.file_url
+      fileUrl: record.file_url,
+      oligoUrl: record.file_url // Add oligoUrl field - same as fileUrl for Oligo reports
     };
     
     console.log('Final scanInfo:', scanInfo);

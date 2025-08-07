@@ -25,7 +25,7 @@ function getOAuthToken() {
         }
         try {
             console.log('Getting new OAuth token...');
-            const tokenResponse = yield fetch('https://sts.x-inity.com/connect/token', {
+            const tokenResponse = yield fetch('https://sts.buildup-egypt.com/connect/token', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -432,7 +432,7 @@ router.post('/medical-report-webhook', (req, res) => __awaiter(void 0, void 0, v
         }
         console.log('Sending mapped payload to Buildup gateway:', JSON.stringify(buildupPayload, null, 2));
         // Send to Buildup gateway
-        const webhookResponse = yield fetch('https://buildup-gateway.x-inity.com/IntegrationAPI/v1/HealthInsights/Submit', {
+        const webhookResponse = yield fetch('https://buildup-gateway.buildup-egypt.com/IntegrationAPI/v1/HealthInsights/Submit', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

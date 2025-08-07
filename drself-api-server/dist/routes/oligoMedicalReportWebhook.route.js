@@ -341,6 +341,7 @@ router.post('/oligo-medical-report-webhook', (req, res) => __awaiter(void 0, voi
         console.log('record.doctor_name:', record.doctor_name);
         console.log('record.hospital_name:', record.hospital_name);
         console.log('record.file_url:', record.file_url);
+        console.log('record.oligo_url:', record.oligo_url); // ✅ ADDED - Check if oligo_url exists in record
         const scanInfo = {
             title: record.title,
             description: record.description,
@@ -351,7 +352,7 @@ router.post('/oligo-medical-report-webhook', (req, res) => __awaiter(void 0, voi
             doctorName: record.doctor_name,
             hospitalName: record.hospital_name,
             fileUrl: record.file_url,
-            oligoUrl: record.file_url // Add oligoUrl field - same as fileUrl for Oligo reports
+            oligoUrl: record.oligo_url || record.file_url // Use oligo_url from record if available, fallback to file_url
         };
         console.log('Final scanInfo:', scanInfo);
         console.log('Final bloodTestsArray:', bloodTestsArray);
